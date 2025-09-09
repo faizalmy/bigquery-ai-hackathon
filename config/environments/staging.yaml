@@ -1,0 +1,43 @@
+# Staging Environment Configuration
+# Legal Document Intelligence Platform
+
+environment: staging
+debug: false
+log_level: INFO
+
+# BigQuery Configuration
+bigquery:
+  project_id: "legal-ai-platform-staging"
+  location: "US"
+  dataset_prefix: "staging_"
+
+# AI Models Configuration
+ai_models:
+  legal_extractor:
+    model_type: "GEMINI_PRO"
+    max_tokens: 2048
+  legal_summarizer:
+    model_type: "GEMINI_PRO"
+    max_tokens: 1024
+  urgency_detector:
+    model_type: "GEMINI_PRO"
+    max_tokens: 512
+
+# Data Processing
+data_processing:
+  batch_size: 50
+  max_retries: 3
+  timeout_seconds: 600
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 2
+  reload: false
+
+# Monitoring
+monitoring:
+  enabled: true
+  metrics_interval: 30
+  log_retention_days: 14

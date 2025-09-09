@@ -1,0 +1,43 @@
+# Production Environment Configuration
+# Legal Document Intelligence Platform
+
+environment: production
+debug: false
+log_level: WARNING
+
+# BigQuery Configuration
+bigquery:
+  project_id: "legal-ai-platform-prod"
+  location: "US"
+  dataset_prefix: "prod_"
+
+# AI Models Configuration
+ai_models:
+  legal_extractor:
+    model_type: "GEMINI_PRO"
+    max_tokens: 2048
+  legal_summarizer:
+    model_type: "GEMINI_PRO"
+    max_tokens: 1024
+  urgency_detector:
+    model_type: "GEMINI_PRO"
+    max_tokens: 512
+
+# Data Processing
+data_processing:
+  batch_size: 100
+  max_retries: 5
+  timeout_seconds: 1200
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  reload: false
+
+# Monitoring
+monitoring:
+  enabled: true
+  metrics_interval: 15
+  log_retention_days: 30
