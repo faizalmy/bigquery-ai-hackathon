@@ -332,9 +332,12 @@ def main():
         else:
             print("❌ Failed to upload LexGLUE documents to BigQuery")
 
-        # Save to local file as backup
-        output_file = Path(__file__).parent.parent.parent / 'data' / 'raw' / 'lexglue_datasets.json'
-        output_file.parent.mkdir(parents=True, exist_ok=True)
+        # Save to local file as backup in organized folder structure
+        output_dir = Path(__file__).parent.parent.parent / 'data' / 'raw' / 'lexglue_datasets'
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_file = output_dir / f'lexglue_datasets_{timestamp}.json'
 
         with open(output_file, 'w') as f:
             json.dump(documents, f, indent=2)

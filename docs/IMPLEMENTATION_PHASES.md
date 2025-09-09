@@ -150,7 +150,6 @@ touch src/utils/logging_config.py
 **Deliverables:**
 - [ ] LexGLUE benchmark dataset (200+ documents)
 - [ ] Legal NLP sample dataset (300+ cases)
-- [ ] Synthetic legal documents for testing (100+ documents)
 - [ ] Data quality validation reports
 
 **Technical Tasks:**
@@ -161,7 +160,6 @@ def load_legal_datasets():
     datasets = {
         'lexglue': load_lexglue_dataset(),  # 200+ documents
         'legal_nlp': load_legal_nlp_dataset(),  # 300+ cases
-        'synthetic': generate_synthetic_legal_docs()  # 100+ test docs
     }
     return datasets
 

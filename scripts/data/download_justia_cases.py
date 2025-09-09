@@ -380,9 +380,12 @@ def main():
         else:
             print("❌ Failed to upload Justia cases to BigQuery")
 
-        # Save to local file as backup
-        output_file = Path(__file__).parent.parent.parent / 'data' / 'raw' / 'justia_cases.json'
-        output_file.parent.mkdir(parents=True, exist_ok=True)
+        # Save to local file as backup in organized folder structure
+        output_dir = Path(__file__).parent.parent.parent / 'data' / 'raw' / 'justia_cases'
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_file = output_dir / f'justia_cases_{timestamp}.json'
 
         with open(output_file, 'w') as f:
             json.dump(cases, f, indent=2)

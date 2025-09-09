@@ -19,6 +19,7 @@ sys.path.append(str(Path(__file__).parent.parent.parent / 'src'))
 
 from config import load_config
 from utils.bigquery_client import BigQueryClient
+from utils.data_organization import DataOrganizer
 
 # Import our downloaders
 from download_sec_contracts import SECContractsDownloader
@@ -41,6 +42,10 @@ class LegalDataIngestionPipeline:
         self.config = config
         self.bq_client = BigQueryClient(config)
 
+        # Initialize data organizer
+        self.data_organizer = DataOrganizer()
+        self.data_organizer.ensure_folder_structure()
+
         # Initialize downloaders
         self.sec_downloader = SECContractsDownloader(config)
         self.court_downloader = CourtCasesDownloader(config)
@@ -49,6 +54,7 @@ class LegalDataIngestionPipeline:
         self.justia_downloader = JustiaDownloader(config)
         self.openlegal_downloader = OpenLegalDataDownloader(config)
         self.lii_downloader = LIIDownloader(config)
+
 
         # Data collection targets (updated for Phase 2)
         self.targets = {
@@ -247,9 +253,13 @@ class LegalDataIngestionPipeline:
             return False
 
     def save_to_local(self, documents: List[Dict], document_type: str) -> str:
-        """Save documents to local file."""
-        output_file = Path(__file__).parent.parent.parent / 'data' / 'raw' / f'{document_type}.json'
-        output_file.parent.mkdir(parents=True, exist_ok=True)
+        """Save documents to local file in organized folder structure."""
+        # Use data organizer to get proper path
+        output_dir = self.data_organizer.get_raw_data_path(document_type)
+
+        # Save with timestamp for versioning
+        filename = self.data_organizer.create_timestamped_filename(document_type, 'json')
+        output_file = output_dir / filename
 
         with open(output_file, 'w') as f:
             json.dump(documents, f, indent=2)
@@ -453,13 +463,17 @@ def main():
     results = pipeline.run_full_pipeline()
 
     # Save results summary
-    results_file = Path(__file__).parent.parent.parent / 'data' / 'raw' / 'ingestion_results.json'
+    results_file = Path(__file__).parent.parent.parent / 'data' / 'validation' / 'ingestion_results.json'
     results_file.parent.mkdir(parents=True, exist_ok=True)
 
     with open(results_file, 'w') as f:
         json.dump(results, f, indent=2)
 
     print(f"\n💾 Pipeline results saved to: {results_file}")
+
+    # Show data organization summary
+    print(f"\n📁 Data Organization Summary:")
+    pipeline.data_organizer.print_data_summary()
 
     # Return success status
     total_documents = sum(results['documents_downloaded'].values())
