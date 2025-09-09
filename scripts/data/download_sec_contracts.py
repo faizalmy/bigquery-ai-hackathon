@@ -139,25 +139,53 @@ class SECContractsDownloader:
             return None
 
         # Convert accession number to file path format
-        # e.g., 0001234567-23-000001 -> 000123456723000001
-        accession_path = accession_number.replace('-', '')
+        # e.g., 0001234567-23-000001 -> 0001234567-23-000001 (keep dashes for path)
+        accession_path = accession_number
 
-        # Construct file URL
+        # Construct file URL with proper SEC EDGAR path structure
         file_url = f"{self.edgar_url}/data/{accession_path}/{primary_document}"
 
-        try:
-            time.sleep(self.request_delay)
-            response = self.session.get(file_url)
-            response.raise_for_status()
+        for attempt in range(self.max_retries):
+            try:
+                time.sleep(self.request_delay)
+                response = self.session.get(file_url)
 
-            # Try to decode as text
-            content = response.text
-            logger.info(f"Downloaded filing: {primary_document} ({len(content)} chars)")
-            return content
+                # Handle 404 errors gracefully
+                if response.status_code == 404:
+                    logger.warning(f"Filing not found (404): {primary_document} at {file_url}")
+                    return None
 
-        except Exception as e:
-            logger.error(f"Error downloading filing {primary_document}: {e}")
-            return None
+                response.raise_for_status()
+
+                # Try to decode as text
+                content = response.text
+                logger.info(f"Downloaded filing: {primary_document} ({len(content)} chars)")
+                return content
+
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 404:
+                    logger.warning(f"Filing not found (404): {primary_document} at {file_url}")
+                    return None
+                elif attempt < self.max_retries - 1:
+                    logger.warning(f"HTTP error for {primary_document} (attempt {attempt + 1}): {e}. Retrying...")
+                    time.sleep(self.retry_delay)
+                    continue
+                else:
+                    logger.error(f"HTTP error downloading filing {primary_document}: {e}")
+                    return None
+            except requests.exceptions.RequestException as e:
+                if attempt < self.max_retries - 1:
+                    logger.warning(f"Network error for {primary_document} (attempt {attempt + 1}): {e}. Retrying...")
+                    time.sleep(self.retry_delay)
+                    continue
+                else:
+                    logger.error(f"Network error downloading filing {primary_document}: {e}")
+                    return None
+            except Exception as e:
+                logger.error(f"Unexpected error downloading filing {primary_document}: {e}")
+                return None
+
+        return None
 
     def extract_contracts_from_filing(self, content: str, filing_info: Dict) -> List[Dict]:
         """
@@ -260,32 +288,50 @@ class SECContractsDownloader:
         # Get recent filings
         filings = self.get_company_filings(cik)
 
+        if not filings:
+            logger.warning(f"No filings found for CIK {cik}")
+            return []
+
         all_contracts = []
         contracts_downloaded = 0
+        failed_downloads = 0
+        max_failures = 10  # Stop after too many failures
 
         for filing in filings:
             if contracts_downloaded >= max_contracts:
                 break
 
-            # Download filing content
-            content = self.download_filing_content(
-                filing['accession_number'],
-                filing['primary_document']
-            )
+            if failed_downloads >= max_failures:
+                logger.warning(f"Too many failed downloads ({failed_downloads}) for CIK {cik}, stopping")
+                break
 
-            if content:
-                # Extract contracts from filing
-                contracts = self.extract_contracts_from_filing(content, filing)
+            try:
+                # Download filing content
+                content = self.download_filing_content(
+                    filing['accession_number'],
+                    filing['primary_document']
+                )
 
-                for contract in contracts:
-                    if contracts_downloaded >= max_contracts:
-                        break
-                    all_contracts.append(contract)
-                    contracts_downloaded += 1
+                if content:
+                    # Extract contracts from filing
+                    contracts = self.extract_contracts_from_filing(content, filing)
 
-                logger.info(f"Extracted {len(contracts)} contracts from {filing['form_type']} filing")
+                    for contract in contracts:
+                        if contracts_downloaded >= max_contracts:
+                            break
+                        all_contracts.append(contract)
+                        contracts_downloaded += 1
 
-        logger.info(f"Total contracts downloaded for CIK {cik}: {len(all_contracts)}")
+                    logger.info(f"Extracted {len(contracts)} contracts from {filing['form_type']} filing")
+                else:
+                    failed_downloads += 1
+                    logger.debug(f"Failed to download filing: {filing['primary_document']}")
+
+            except Exception as e:
+                failed_downloads += 1
+                logger.warning(f"Error processing filing {filing['primary_document']}: {e}")
+
+        logger.info(f"Total contracts downloaded for CIK {cik}: {len(all_contracts)} (failed downloads: {failed_downloads})")
         return all_contracts
 
 def get_popular_company_ciks() -> List[str]:

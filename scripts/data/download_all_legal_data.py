@@ -127,18 +127,27 @@ class LegalDataIngestionPipeline:
         all_contracts = []
         contracts_per_company = max_contracts // len(company_ciks)
 
+        successful_companies = 0
+        failed_companies = 0
+
         for cik in company_ciks:
             try:
                 company_name = self.get_company_name(cik)
                 contracts = self.sec_downloader.download_company_contracts(cik, max_contracts=contracts_per_company)
-                all_contracts.extend(contracts)
-                logger.info(f"Downloaded {len(contracts)} contracts from {company_name} (CIK: {cik})")
+                if contracts:
+                    all_contracts.extend(contracts)
+                    successful_companies += 1
+                    logger.info(f"Downloaded {len(contracts)} contracts from {company_name} (CIK: {cik})")
+                else:
+                    failed_companies += 1
+                    logger.warning(f"No contracts downloaded from {company_name} (CIK: {cik})")
             except Exception as e:
                 company_name = self.get_company_name(cik)
+                failed_companies += 1
                 logger.error(f"Error downloading contracts for {company_name} (CIK: {cik}): {e}")
                 continue
 
-        logger.info(f"✅ Total SEC contracts downloaded: {len(all_contracts)}")
+        logger.info(f"✅ SEC download complete: {len(all_contracts)} contracts from {successful_companies} companies ({failed_companies} failed)")
         return all_contracts
 
     def download_court_cases(self, max_cases: int = 150) -> List[Dict]:
