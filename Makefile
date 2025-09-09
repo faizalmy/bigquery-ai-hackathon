@@ -10,6 +10,8 @@ help:
 	@echo "Setup Commands:"
 	@echo "  setup              - Complete project setup"
 	@echo "  setup-bigquery     - Setup BigQuery project and datasets"
+	@echo "  setup-bigquery-tables - Create BigQuery tables"
+	@echo "  test-bigquery      - Test BigQuery setup"
 	@echo "  setup-env          - Setup Python virtual environment"
 	@echo ""
 	@echo "Development Commands:"
@@ -21,8 +23,13 @@ help:
 	@echo ""
 	@echo "Data Commands:"
 	@echo "  process-data       - Process legal documents"
-	@echo "  download-data      - Download legal datasets"
+	@echo "  download-data      - Download all legal datasets"
+	@echo "  download-sec-contracts - Download SEC contracts"
+	@echo "  download-court-cases   - Download court cases"
+	@echo "  download-legal-briefs  - Download legal briefs"
 	@echo "  validate-data      - Validate data quality"
+	@echo "  test-sec-download  - Test SEC contracts download"
+	@echo "  demo-data          - Generate demo legal documents"
 	@echo ""
 	@echo "Deployment Commands:"
 	@echo "  deploy-staging     - Deploy to staging environment"
@@ -44,7 +51,7 @@ help:
 	@echo "  lint               - Run linting checks"
 
 # Setup Commands
-setup: setup-env install setup-bigquery
+setup: setup-env install setup-bigquery setup-bigquery-tables test-bigquery
 	@echo "✅ Complete project setup completed"
 
 setup-env:
@@ -54,12 +61,19 @@ setup-env:
 
 setup-bigquery:
 	@echo "🔧 Setting up BigQuery project..."
-	@echo "⚠️  Please run the BigQuery setup commands manually:"
-	@echo "   gcloud projects create legal-ai-platform-{timestamp}"
-	@echo "   gcloud config set project legal-ai-platform-{timestamp}"
-	@echo "   gcloud services enable bigquery.googleapis.com"
-	@echo "   gcloud services enable aiplatform.googleapis.com"
-	@echo "   gcloud services enable storage.googleapis.com"
+	@echo "Running BigQuery setup script..."
+	./scripts/setup/bigquery_setup.sh
+	@echo "✅ BigQuery setup completed"
+
+setup-bigquery-tables:
+	@echo "🔧 Creating BigQuery tables..."
+	source venv/bin/activate && python scripts/setup/create_bigquery_tables.py
+	@echo "✅ BigQuery tables created"
+
+test-bigquery:
+	@echo "🧪 Testing BigQuery setup..."
+	source venv/bin/activate && python scripts/setup/test_bigquery_setup.py
+	@echo "✅ BigQuery test completed"
 
 # Development Commands
 install:
@@ -83,19 +97,40 @@ test-unit:
 test-integration:
 	@echo "🧪 Running integration tests..."
 	source venv/bin/activate && python -m pytest tests/integration/ -v
+	source venv/bin/activate && python tests/integration/test_sec_download.py
 
 # Data Commands
 process-data:
 	@echo "📊 Processing legal documents..."
-	source venv/bin/activate && python scripts/data/process_documents.py
+	source venv/bin/activate && python3 scripts/data/process_documents.py
 
 download-data:
-	@echo "📥 Downloading legal datasets..."
-	source venv/bin/activate && python scripts/data/download_legal_datasets.py
+	@echo "📥 Downloading all legal datasets..."
+	source venv/bin/activate && python3 scripts/data/download_all_legal_data.py
+
+download-sec-contracts:
+	@echo "🏢 Downloading SEC contracts..."
+	source venv/bin/activate && python3 scripts/data/download_sec_contracts.py
+
+download-court-cases:
+	@echo "⚖️  Downloading court cases..."
+	source venv/bin/activate && python3 scripts/data/download_court_cases.py
+
+download-legal-briefs:
+	@echo "📋 Downloading legal briefs..."
+	source venv/bin/activate && python3 scripts/data/download_legal_briefs.py
 
 validate-data:
 	@echo "✅ Validating data quality..."
-	source venv/bin/activate && python scripts/data/validate_data.py
+	source venv/bin/activate && python3 scripts/data/validate_legal_data.py
+
+test-sec-download:
+	@echo "🧪 Testing SEC contracts download..."
+	source venv/bin/activate && python3 tests/integration/test_sec_download.py
+
+demo-data:
+	@echo "🎭 Generating demo legal documents..."
+	source venv/bin/activate && python3 scripts/data/demo_data_download.py
 
 # Deployment Commands
 deploy-staging:
@@ -135,9 +170,7 @@ package-submission:
 # Utility Commands
 clean:
 	@echo "🧹 Cleaning temporary files..."
-	find . -type f -name "*.pyc" -delete
-	find . -type d -name "__pycache__" -delete
-	find . -type f -name "*.log" -delete
+	./scripts/maintenance/cleanup.sh
 	@echo "✅ Cleanup completed"
 
 format:

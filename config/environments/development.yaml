@@ -7,7 +7,7 @@ log_level: DEBUG
 
 # BigQuery Configuration
 bigquery:
-  project_id: "legal-ai-platform-dev"
+  project_id: "faizal-hackathon"
   location: "US"
   dataset_prefix: "dev_"
 

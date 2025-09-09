@@ -166,14 +166,11 @@ class BigQueryClient:
             Project information dictionary
         """
         try:
-            project = self.client.get_project(self.project_id)
-
+            # Get project info using the client's project property
             return {
-                'project_id': project.project_id,
-                'friendly_name': project.friendly_name,
-                'location': project.location,
-                'created': project.created,
-                'modified': project.modified
+                'project_id': self.project_id,
+                'name': f"Project {self.project_id}",
+                'project_number': 'N/A'
             }
 
         except Exception as e:
