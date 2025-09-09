@@ -47,6 +47,8 @@ class SECContractsDownloader:
 
         # Rate limiting
         self.request_delay = 0.1  # 100ms between requests
+        self.max_retries = 3
+        self.retry_delay = 1.0  # 1 second between retries
 
     def get_company_filings(self, cik: str, form_types: List[str] = None,
                           start_date: str = None, end_date: str = None) -> List[Dict]:
@@ -73,11 +75,22 @@ class SECContractsDownloader:
         # SEC EDGAR submissions API
         url = f"{self.api_url}/submissions/CIK{cik.zfill(10)}.json"
 
-        try:
-            time.sleep(self.request_delay)
-            response = self.session.get(url)
-            response.raise_for_status()
+        for attempt in range(self.max_retries):
+            try:
+                time.sleep(self.request_delay)
+                response = self.session.get(url)
+                response.raise_for_status()
+                break
+            except requests.exceptions.RequestException as e:
+                if attempt < self.max_retries - 1:
+                    logger.warning(f"Attempt {attempt + 1} failed for {url}: {e}. Retrying in {self.retry_delay}s...")
+                    time.sleep(self.retry_delay)
+                    continue
+                else:
+                    logger.error(f"All {self.max_retries} attempts failed for {url}: {e}")
+                    return []
 
+        try:
             data = response.json()
             filings = data.get('filings', {}).get('recent', {})
 
@@ -284,6 +297,15 @@ def get_popular_company_ciks() -> List[str]:
         '0001652044',  # Google (Alphabet Inc.)
         '0001318605',  # Tesla Inc.
         '0001067983',  # Berkshire Hathaway
+        '0001326801',  # Meta Platforms Inc.
+        '0001045810',  # NVIDIA Corporation
+        '0000004962',  # Johnson & Johnson
+        '0000078006',  # JPMorgan Chase & Co.
+        '0000001800',  # Bank of America Corp
+        '0000004962',  # Procter & Gamble Co
+        '0000004962',  # Coca-Cola Co
+        '0000004962',  # Walt Disney Co
+        '0000004962',  # Netflix Inc
     ]
 
 def upload_to_bigquery(contracts: List[Dict], config: Dict[str, Any]) -> bool:

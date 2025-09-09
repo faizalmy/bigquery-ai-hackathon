@@ -126,6 +126,121 @@
 
 ---
 
+#### **6. Justia Legal Database - BEST FOR RECENT CASES**
+**Source**: Justia.com legal database
+**Size**: 10M+ legal documents
+**Document Types**:
+- Recent court opinions
+- Legal briefs and motions
+- Case summaries
+- Legal news and analysis
+
+**Access**:
+- **Website**: [Justia.com](https://www.justia.com)
+- **API**: Available for research
+- **Bulk Download**: Contact for research access
+
+**Why Perfect for Your Project**:
+- ✅ **Most recent cases** (updated daily)
+- ✅ **High-quality summaries** and analysis
+- ✅ **Diverse jurisdictions** (federal and state)
+- ✅ **Free access** for research purposes
+- ✅ **Structured metadata** for easy processing
+
+---
+
+#### **7. OpenLegalData - BEST FOR STRUCTURED DATA**
+**Source**: OpenLegalData.org
+**Size**: 1M+ structured legal documents
+**Document Types**:
+- Court opinions with structured data
+- Legal citations and references
+- Case metadata and outcomes
+- Legal entity relationships
+
+**Access**:
+- **Website**: [OpenLegalData.org](https://www.openlegaldata.org)
+- **API**: RESTful API available
+- **GitHub**: [OpenLegalData Repository](https://github.com/openlegaldata)
+
+**Why Perfect for Your Project**:
+- ✅ **Pre-structured data** ready for AI processing
+- ✅ **Legal citations** for similarity analysis
+- ✅ **Entity relationships** for knowledge graphs
+- ✅ **Open source** with clear licensing
+- ✅ **API-first** design for easy integration
+
+---
+
+#### **8. Legal Information Institute (LII) - BEST FOR LEGAL TEXTS**
+**Source**: Cornell Law School
+**Size**: 500K+ legal documents
+**Document Types**:
+- US Supreme Court cases
+- Federal court opinions
+- Legal codes and statutes
+- Legal encyclopedias
+
+**Access**:
+- **Website**: [Law.Cornell.edu](https://www.law.cornell.edu)
+- **API**: Available for research
+- **Bulk Access**: Contact for research purposes
+
+**Why Perfect for Your Project**:
+- ✅ **Authoritative source** from Cornell Law
+- ✅ **High-quality legal texts** with expert curation
+- ✅ **Historical depth** (decades of cases)
+- ✅ **Free access** for educational use
+- ✅ **Structured legal citations**
+
+---
+
+#### **9. Court Listener RECAP Archive - BEST FOR FEDERAL FILINGS**
+**Source**: RECAP project (Free Law Project)
+**Size**: 5M+ federal court filings
+**Document Types**:
+- Federal court dockets
+- Legal briefs and motions
+- Court orders and opinions
+- Case filings and documents
+
+**Access**:
+- **Website**: [CourtListener.com](https://www.courtlistener.com/recap/)
+- **API**: [RECAP API](https://www.courtlistener.com/api/rest/v3/)
+- **Bulk Download**: Available for research
+
+**Why Perfect for Your Project**:
+- ✅ **Federal court focus** for high-quality cases
+- ✅ **Complete case files** with all documents
+- ✅ **Real-time updates** from PACER system
+- ✅ **Free access** for research
+- ✅ **Comprehensive metadata**
+
+---
+
+#### **10. Legal NLP Datasets - BEST FOR BENCHMARKING**
+**Source**: Various academic institutions
+**Size**: Multiple datasets, 100K+ documents total
+**Document Types**:
+- Legal text classification datasets
+- Contract analysis datasets
+- Legal question answering datasets
+- Legal summarization datasets
+
+**Access**:
+- **GitHub**: [Legal NLP Datasets](https://github.com/neelguha/legal-ml-datasets)
+- **Papers**: Various academic papers
+- **Direct Download**: Available from repositories
+
+**Why Perfect for Your Project**:
+- ✅ **Benchmark datasets** for validation
+- ✅ **Multiple legal tasks** covered
+- ✅ **Academic validation** of results
+- ✅ **Standardized formats** for testing
+- ✅ **Performance baselines** available
+
+---
+
 ## 🚀 **Quick Start Guide**
 
 ### **Option 1: SEC Contracts (Recommended for MVP)**
@@ -299,20 +414,36 @@ CREATE TABLE `your_project.legal_documents` (
 ### **Phase 1: MVP Testing (Week 1)**
 **Target**: 1,000 documents
 **Sources**:
-- 500 SEC contracts (recent 10-K, 8-K filings)
 - 300 court cases (Free Law Project)
 - 200 legal briefs (CourtListener)
+- 200 LexGLUE benchmark documents
+- 200 recent cases (Justia)
+- 100 structured documents (OpenLegalData)
 
 **Focus**: Basic document analysis and summarization
 
 ### **Phase 2: Advanced Testing (Week 2)**
 **Target**: 5,000+ documents
 **Sources**:
-- 2,000 SEC contracts (diverse types)
-- 2,000 court cases (multiple jurisdictions)
-- 1,000 legal briefs and motions
+- 1,500 court cases (Free Law Project + Justia)
+- 1,000 legal briefs and motions (CourtListener)
+- 1,000 LexGLUE benchmark documents
+- 1,000 structured documents (OpenLegalData)
+- 500 Cornell Law cases (LII)
+- 500 federal filings (RECAP Archive)
 
 **Focus**: Vector search, similarity matching, predictions
+
+### **Phase 3: Competition Ready (Week 3)**
+**Target**: 10,000+ documents
+**Sources**:
+- 3,000 court cases (all sources)
+- 2,000 legal briefs and motions
+- 2,000 LexGLUE benchmark documents
+- 2,000 structured documents (OpenLegalData)
+- 1,000 Cornell Law cases (LII)
+
+**Focus**: Full platform demonstration with comprehensive dataset
 
 ---
 
@@ -423,16 +554,48 @@ pip install requests beautifulsoup4 pandas
 python download_sec_contracts.py --count 100 --output contracts.json
 ```
 
-### **Download Court Cases**
+### **Download Court Cases from Free Law Project**
 ```bash
 # Download court cases
 python download_court_cases.py --count 200 --output cases.json
 ```
 
+### **Download Legal Briefs from CourtListener**
+```bash
+# Download legal briefs and motions
+python download_legal_briefs.py --count 300 --output briefs.json
+```
+
+### **Download LexGLUE Benchmark Datasets**
+```bash
+# Download LexGLUE datasets
+git clone https://github.com/coastalcph/lexglue.git
+cd lexglue
+python download_datasets.py --output-dir ./data
+```
+
+### **Download from Justia Legal Database**
+```bash
+# Download recent cases from Justia
+python download_justia_cases.py --count 500 --output justia_cases.json
+```
+
+### **Download from OpenLegalData**
+```bash
+# Download structured legal data
+python download_openlegaldata.py --count 1000 --output openlegal_data.json
+```
+
+### **Download from Legal Information Institute (LII)**
+```bash
+# Download Cornell Law cases
+python download_lii_cases.py --count 300 --output lii_cases.json
+```
+
 ### **Upload to BigQuery**
 ```bash
-# Upload to BigQuery
-python upload_to_bigquery.py --input contracts.json --table legal_documents
+# Upload all documents to BigQuery
+python upload_to_bigquery.py --input-dir ./data --table legal_documents
 ```
 
 ---
@@ -442,18 +605,32 @@ python upload_to_bigquery.py --input contracts.json --table legal_documents
 ### **GitHub Repositories**
 - [Legal ML Datasets](https://github.com/neelguha/legal-ml-datasets)
 - [LexGLUE](https://github.com/coastalcph/lexglue)
+- [OpenLegalData](https://github.com/openlegaldata)
 - [Legal Document Processing](https://github.com/legal-tech-research)
+- [Legal NLP Datasets](https://github.com/neelguha/legal-ml-datasets)
 
 ### **Research Papers**
 - [Material Contracts Corpus](https://arxiv.org/abs/2504.02864)
 - [Cambridge Law Corpus](https://arxiv.org/abs/2309.12269)
 - [MultiLegalPile](https://arxiv.org/abs/2306.02069)
+- [LexGLUE Paper](https://arxiv.org/abs/2110.00976)
+- [Legal Information Retrieval](https://arxiv.org/abs/2301.10012)
 
 ### **APIs and Tools**
 - [SEC EDGAR API](https://www.sec.gov/edgar/sec-api-documentation)
 - [Free Law Project API](https://www.courtlistener.com/api/)
 - [CourtListener Search](https://www.courtlistener.com/api/rest/v3/search/)
+- [OpenLegalData API](https://www.openlegaldata.org/api/)
+- [Justia Legal API](https://www.justia.com/api/)
+- [Cornell LII API](https://www.law.cornell.edu/api/)
+
+### **Legal Data Portals**
+- [CourtListener](https://www.courtlistener.com) - Free Law Project
+- [Justia](https://www.justia.com) - Legal database
+- [OpenLegalData](https://www.openlegaldata.org) - Structured legal data
+- [Cornell LII](https://www.law.cornell.edu) - Legal Information Institute
+- [RECAP Archive](https://www.courtlistener.com/recap/) - Federal filings
 
 ---
 
-**🎯 Recommendation: Start with SEC contracts (Material Contracts Corpus) for your MVP - they're real, diverse, and perfect for testing your BigQuery AI legal platform!**
+**🎯 Recommendation: Start with Free Law Project (CourtListener) and LexGLUE datasets for your MVP - they're real, diverse, and perfect for testing your BigQuery AI legal platform! These sources provide immediate access to high-quality legal documents without the complexity of SEC EDGAR downloads.**

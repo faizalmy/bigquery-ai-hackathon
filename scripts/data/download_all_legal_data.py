@@ -24,6 +24,10 @@ from utils.bigquery_client import BigQueryClient
 from download_sec_contracts import SECContractsDownloader
 from download_court_cases import CourtCasesDownloader
 from download_legal_briefs import LegalBriefsDownloader
+from download_lexglue_datasets import LexGLUEDownloader
+from download_justia_cases import JustiaDownloader
+from download_openlegaldata import OpenLegalDataDownloader
+from download_lii_legal_docs import LIIDownloader
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -41,12 +45,20 @@ class LegalDataIngestionPipeline:
         self.sec_downloader = SECContractsDownloader(config)
         self.court_downloader = CourtCasesDownloader(config)
         self.briefs_downloader = LegalBriefsDownloader(config)
+        self.lexglue_downloader = LexGLUEDownloader(config)
+        self.justia_downloader = JustiaDownloader(config)
+        self.openlegal_downloader = OpenLegalDataDownloader(config)
+        self.lii_downloader = LIIDownloader(config)
 
-        # Data collection targets
+        # Data collection targets (updated for Phase 2)
         self.targets = {
-            'sec_contracts': 200,
-            'court_cases': 150,
-            'legal_briefs': 100
+            'sec_contracts': 200,      # Keep existing (may have issues)
+            'court_cases': 300,        # Increase from 150
+            'legal_briefs': 200,       # Increase from 100
+            'lexglue_datasets': 200,   # New: Benchmark datasets
+            'justia_cases': 200,       # New: Recent cases
+            'openlegal_data': 100,     # New: Structured data
+            'lii_documents': 200       # New: LII legal documents (WORKING!)
         }
 
     def remove_duplicate_companies(self, company_ciks: List[str]) -> List[str]:
@@ -135,7 +147,7 @@ class LegalDataIngestionPipeline:
             logger.error(f"Error downloading court cases: {e}")
             return []
 
-    def download_legal_briefs(self, max_briefs: int = 100) -> List[Dict]:
+    def download_legal_briefs(self, max_briefs: int = 200) -> List[Dict]:
         """Download legal briefs."""
         logger.info("📋 Downloading legal briefs...")
 
@@ -145,6 +157,54 @@ class LegalDataIngestionPipeline:
             return briefs
         except Exception as e:
             logger.error(f"Error downloading legal briefs: {e}")
+            return []
+
+    def download_lexglue_datasets(self, max_documents: int = 200) -> List[Dict]:
+        """Download LexGLUE benchmark datasets."""
+        logger.info("📚 Downloading LexGLUE benchmark datasets...")
+
+        try:
+            documents = self.lexglue_downloader.download_lexglue_datasets(max_documents=max_documents)
+            logger.info(f"✅ Total LexGLUE documents downloaded: {len(documents)}")
+            return documents
+        except Exception as e:
+            logger.error(f"Error downloading LexGLUE datasets: {e}")
+            return []
+
+    def download_justia_cases(self, max_cases: int = 200) -> List[Dict]:
+        """Download recent cases from Justia."""
+        logger.info("⚖️  Downloading recent cases from Justia...")
+
+        try:
+            cases = self.justia_downloader.download_justia_cases(max_cases=max_cases)
+            logger.info(f"✅ Total Justia cases downloaded: {len(cases)}")
+            return cases
+        except Exception as e:
+            logger.error(f"Error downloading Justia cases: {e}")
+            return []
+
+    def download_openlegal_data(self, max_documents: int = 100) -> List[Dict]:
+        """Download structured data from OpenLegalData."""
+        logger.info("📊 Downloading structured data from OpenLegalData...")
+
+        try:
+            documents = self.openlegal_downloader.download_openlegal_data(max_documents=max_documents)
+            logger.info(f"✅ Total OpenLegalData documents downloaded: {len(documents)}")
+            return documents
+        except Exception as e:
+            logger.error(f"Error downloading OpenLegalData: {e}")
+            return []
+
+    def download_lii_documents(self, max_documents: int = 200) -> List[Dict]:
+        """Download legal documents from Legal Information Institute (LII)."""
+        logger.info("🏛️  Downloading legal documents from LII...")
+
+        try:
+            documents = self.lii_downloader.download_lii_documents(max_documents=max_documents)
+            logger.info(f"✅ Total LII documents downloaded: {len(documents)}")
+            return documents
+        except Exception as e:
+            logger.error(f"Error downloading LII documents: {e}")
             return []
 
     def upload_to_bigquery(self, documents: List[Dict], document_type: str) -> bool:
@@ -261,6 +321,78 @@ class LegalDataIngestionPipeline:
                 results['files_saved']['legal_briefs'] = file_path
         except Exception as e:
             error_msg = f"Error processing legal briefs: {e}"
+            logger.error(error_msg)
+            results['errors'].append(error_msg)
+
+        # Download LexGLUE datasets
+        try:
+            lexglue_docs = self.download_lexglue_datasets(self.targets['lexglue_datasets'])
+            results['documents_downloaded']['lexglue_datasets'] = len(lexglue_docs)
+
+            if lexglue_docs:
+                # Upload to BigQuery
+                upload_success = self.upload_to_bigquery(lexglue_docs, 'LexGLUE Datasets')
+                results['upload_success']['lexglue_datasets'] = upload_success
+
+                # Save to local file
+                file_path = self.save_to_local(lexglue_docs, 'lexglue_datasets')
+                results['files_saved']['lexglue_datasets'] = file_path
+        except Exception as e:
+            error_msg = f"Error processing LexGLUE datasets: {e}"
+            logger.error(error_msg)
+            results['errors'].append(error_msg)
+
+        # Download Justia cases
+        try:
+            justia_cases = self.download_justia_cases(self.targets['justia_cases'])
+            results['documents_downloaded']['justia_cases'] = len(justia_cases)
+
+            if justia_cases:
+                # Upload to BigQuery
+                upload_success = self.upload_to_bigquery(justia_cases, 'Justia Cases')
+                results['upload_success']['justia_cases'] = upload_success
+
+                # Save to local file
+                file_path = self.save_to_local(justia_cases, 'justia_cases')
+                results['files_saved']['justia_cases'] = file_path
+        except Exception as e:
+            error_msg = f"Error processing Justia cases: {e}"
+            logger.error(error_msg)
+            results['errors'].append(error_msg)
+
+        # Download OpenLegalData
+        try:
+            openlegal_docs = self.download_openlegal_data(self.targets['openlegal_data'])
+            results['documents_downloaded']['openlegal_data'] = len(openlegal_docs)
+
+            if openlegal_docs:
+                # Upload to BigQuery
+                upload_success = self.upload_to_bigquery(openlegal_docs, 'OpenLegalData')
+                results['upload_success']['openlegal_data'] = upload_success
+
+                # Save to local file
+                file_path = self.save_to_local(openlegal_docs, 'openlegal_data')
+                results['files_saved']['openlegal_data'] = file_path
+        except Exception as e:
+            error_msg = f"Error processing OpenLegalData: {e}"
+            logger.error(error_msg)
+            results['errors'].append(error_msg)
+
+        # Download LII Documents (WORKING!)
+        try:
+            lii_docs = self.download_lii_documents(self.targets['lii_documents'])
+            results['documents_downloaded']['lii_documents'] = len(lii_docs)
+
+            if lii_docs:
+                # Upload to BigQuery
+                upload_success = self.upload_to_bigquery(lii_docs, 'LII Documents')
+                results['upload_success']['lii_documents'] = upload_success
+
+                # Save to local file
+                file_path = self.save_to_local(lii_docs, 'lii_documents')
+                results['files_saved']['lii_documents'] = file_path
+        except Exception as e:
+            error_msg = f"Error processing LII documents: {e}"
             logger.error(error_msg)
             results['errors'].append(error_msg)
 
