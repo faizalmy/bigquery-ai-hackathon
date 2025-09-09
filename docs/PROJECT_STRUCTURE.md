@@ -52,12 +52,25 @@ bigquery-ai-hackathon/
 │   ├── 📁 setup/                        # Environment setup
 │   ├── 📁 data/                         # Data processing scripts
 │   ├── 📁 deployment/                   # Deployment scripts
-│   └── 📁 maintenance/                  # Maintenance scripts
+│   ├── 📁 maintenance/                  # Maintenance scripts
+│   └── 📁 validation/                   # Validation scripts
 │
 ├── 📁 config/                           # Configuration files
 │   ├── 📁 environments/                 # Environment-specific configs
+│   │   ├── 📄 development.yaml          # Development environment
+│   │   ├── 📄 staging.yaml              # Staging environment
+│   │   └── 📄 production.yaml           # Production environment
 │   ├── 📁 models/                       # AI model configurations
+│   │   ├── 📄 legal_extractor.yaml      # Legal extraction model config
+│   │   ├── 📄 document_summarizer.yaml  # Summarization model config
+│   │   ├── 📄 urgency_detector.yaml     # Urgency detection config
+│   │   ├── 📄 outcome_predictor.yaml    # Outcome prediction config
+│   │   └── 📄 risk_assessor.yaml        # Risk assessment config
 │   └── 📁 bigquery/                     # BigQuery configurations
+│       ├── 📄 dataset_schemas.json      # Dataset schemas
+│       ├── 📄 table_schemas.json        # Table schemas
+│       ├── 📄 model_configs.json        # Model configurations
+│       └── 📄 query_templates.sql       # SQL query templates
 │
 ├── 📁 submissions/                      # Competition submissions
 │   ├── 📁 kaggle/                       # Kaggle submission files
@@ -88,6 +101,7 @@ docs/
 ├── 📄 LEGAL_DOCUMENT_SOURCES.md         # Data sources guide
 ├── 📄 COMPETITION_COMPARISON.md         # Competition analysis
 ├── 📄 PROJECT_STRUCTURE.md              # This file
+├── 📄 PHASE_STRUCTURE_ALIGNMENT.md      # Phase-structure cross-reference
 │
 ├── 📁 architecture/                     # Technical architecture
 │   ├── 📄 system-overview.md            # High-level system design
@@ -169,7 +183,7 @@ src/
 │
 ├── 📁 ui/                              # User interface components
 │   ├── 📄 __init__.py
-│   ├── 📄 dashboard.py                  # Main dashboard
+│   ├── 📄 dashboard.py                  # Main dashboard (LegalResearchDashboard)
 │   ├── 📄 components/                   # UI components
 │   │   ├── 📄 __init__.py
 │   │   ├── 📄 search_interface.py       # Document search interface
@@ -328,6 +342,7 @@ scripts/
 ├── 📁 data/                            # Data processing scripts
 │   ├── 📄 download_sec_contracts.py     # SEC contract downloader
 │   ├── 📄 download_court_cases.py       # Court case downloader
+│   ├── 📄 download_legal_datasets.py    # Legal dataset downloader
 │   ├── 📄 process_documents.py          # Document processing
 │   ├── 📄 generate_embeddings.py        # Embedding generation
 │   ├── 📄 validate_data.py              # Data validation
@@ -339,11 +354,17 @@ scripts/
 │   ├── 📄 deploy_ai_models.py           # AI model deployment
 │   └── 📄 rollback_deployment.sh        # Deployment rollback
 │
-└── 📁 maintenance/                     # Maintenance scripts
-    ├── 📄 cleanup_old_data.py           # Data cleanup
-    ├── 📄 backup_database.py            # Database backup
-    ├── 📄 monitor_performance.py        # Performance monitoring
-    └── 📄 update_models.py              # Model updates
+├── 📁 maintenance/                     # Maintenance scripts
+│   ├── 📄 cleanup_old_data.py           # Data cleanup
+│   ├── 📄 backup_database.py            # Database backup
+│   ├── 📄 monitor_performance.py        # Performance monitoring
+│   └── 📄 update_models.py              # Model updates
+│
+└── 📁 validation/                      # Validation scripts
+    ├── 📄 final_validation.sh           # Final validation script
+    ├── 📄 validate_submission.py        # Submission validation
+    ├── 📄 check_alignment.py            # Document alignment check
+    └── 📄 test_ai_models.py             # AI model testing
 ```
 
 ### **📁 config/ - Configuration Files**

@@ -39,6 +39,18 @@ gcloud services enable storage.googleapis.com
 # Create service account
 gcloud iam service-accounts create legal-ai-service \
   --display-name="Legal AI Service Account"
+
+# Create project structure directories
+mkdir -p {src/{core,data,ai/{models},api/{routes},ui/{components,static/{css,js,images},templates},utils},notebooks/{exploration,prototyping,analysis,demos},tests/{unit/{core,data,ai,utils},integration,performance,fixtures},scripts/{setup,data,deployment,maintenance},config/{environments,models,bigquery,monitoring},submissions/{kaggle,demo,assets},monitoring/{dashboards,alerts,logs},data/{raw/{sec_contracts,court_cases,legal_briefs,sample_documents},processed/{cleaned_documents,extracted_metadata,embeddings,structured_data},samples,validation,external/{lexglue,cambridge_law,public_datasets}},docs/{architecture,api,deployment,user-guides}}
+
+# Create configuration files
+touch config/environments/development.yaml
+touch config/environments/staging.yaml
+touch config/environments/production.yaml
+touch config/bigquery/dataset_schemas.json
+touch config/bigquery/table_schemas.json
+touch .env.example
+touch Makefile
 ```
 
 **Quality Gates:**
@@ -93,8 +105,30 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Project structure
-mkdir -p {src,notebooks,tests,docs,data}
+# Initialize Python packages
+touch src/__init__.py
+touch src/core/__init__.py
+touch src/data/__init__.py
+touch src/ai/__init__.py
+touch src/ai/models/__init__.py
+touch src/api/__init__.py
+touch src/api/routes/__init__.py
+touch src/ui/__init__.py
+touch src/ui/components/__init__.py
+touch src/utils/__init__.py
+touch tests/__init__.py
+touch tests/unit/__init__.py
+touch tests/unit/core/__init__.py
+touch tests/unit/data/__init__.py
+touch tests/unit/ai/__init__.py
+touch tests/unit/utils/__init__.py
+
+# Create main application files
+touch src/main.py
+touch src/config.py
+touch src/core/legal_analyzer.py
+touch src/utils/bigquery_client.py
+touch src/utils/logging_config.py
 ```
 
 **Quality Gates:**
@@ -121,7 +155,7 @@ mkdir -p {src,notebooks,tests,docs,data}
 
 **Technical Tasks:**
 ```python
-# Legal dataset loader
+# File: src/data/ingestion.py
 def load_legal_datasets():
     """Load existing legal datasets for MVP"""
     datasets = {
@@ -131,7 +165,7 @@ def load_legal_datasets():
     }
     return datasets
 
-# Dataset validation
+# File: src/data/validation.py
 def validate_legal_data(dataset):
     """Validate legal document quality"""
     return {
@@ -139,6 +173,11 @@ def validate_legal_data(dataset):
         'quality_score': calculate_quality_score(dataset),
         'completeness': check_completeness(dataset)
     }
+
+# File: scripts/data/download_legal_datasets.py
+# Script to download and organize legal datasets
+# File: scripts/data/validate_data.py
+# Script to validate downloaded datasets
 ```
 
 **Quality Gates:**
@@ -156,6 +195,7 @@ def validate_legal_data(dataset):
 
 **Technical Tasks:**
 ```python
+# File: src/data/preprocessing.py
 def preprocess_legal_document(raw_doc):
     """Preprocess legal document for AI analysis"""
     processed = {
@@ -166,6 +206,11 @@ def preprocess_legal_document(raw_doc):
         'quality_score': assess_quality(raw_doc)
     }
     return processed
+
+# File: src/data/transformation.py
+# Data transformation utilities
+# File: scripts/data/process_documents.py
+# Batch document processing script
 ```
 
 **Quality Gates:**
@@ -313,6 +358,7 @@ OPTIONS(
 
 **Technical Tasks:**
 ```python
+# File: src/core/document_processor.py
 class LegalDocumentProcessor:
     def __init__(self, bigquery_client):
         self.client = bigquery_client
@@ -340,6 +386,13 @@ class LegalDocumentProcessor:
             }
         except Exception as e:
             self.handle_error(e, document)
+
+# File: src/core/similarity_engine.py
+# Case law similarity engine implementation
+# File: src/core/prediction_engine.py
+# Predictive analytics engine implementation
+# File: src/core/compliance_monitor.py
+# Compliance monitoring implementation
 ```
 
 **Quality Gates:**
@@ -494,6 +547,7 @@ END;
 
 **Technical Tasks:**
 ```python
+# File: src/ui/dashboard.py
 import streamlit as st
 import plotly.express as px
 import pandas as pd
@@ -521,6 +575,15 @@ class LegalResearchDashboard:
         # Risk assessment
         risk_data = self.get_risk_assessment_data()
         st.plotly_chart(self.create_risk_chart(risk_data))
+
+# File: src/ui/components/search_interface.py
+# Document search interface component
+# File: src/ui/components/similarity_viewer.py
+# Similarity visualization component
+# File: src/ui/components/prediction_display.py
+# Prediction visualization component
+# File: src/ui/components/risk_dashboard.py
+# Risk assessment dashboard component
 ```
 
 **Quality Gates:**
@@ -615,6 +678,7 @@ def create_risk_distribution_chart(risk_data):
 
 **Technical Tasks:**
 ```python
+# File: tests/unit/core/test_document_processor.py
 import unittest
 import pytest
 
@@ -638,6 +702,17 @@ class TestLegalDocumentProcessor(unittest.TestCase):
 
         self.assertGreater(len(similar_cases), 0)
         self.assertTrue(all(case['similarity_score'] > 0.8 for case in similar_cases))
+
+# File: tests/unit/core/test_similarity_engine.py
+# Similarity engine unit tests
+# File: tests/unit/core/test_prediction_engine.py
+# Prediction engine unit tests
+# File: tests/integration/test_api_endpoints.py
+# API integration tests
+# File: tests/integration/test_bigquery_integration.py
+# BigQuery integration tests
+# File: tests/performance/test_query_performance.py
+# Performance tests
 ```
 
 **Quality Gates:**
@@ -700,7 +775,7 @@ ON `legal_ai_platform.processed_data.legal_documents` (created_date);
 
 **Technical Tasks:**
 ```bash
-# Final validation script
+# File: scripts/validation/final_validation.sh
 #!/bin/bash
 
 # Run comprehensive tests
@@ -714,6 +789,11 @@ python scripts/test_ai_models.py
 
 # Generate final documentation
 python scripts/generate_docs.py
+
+# File: scripts/validation/validate_submission.py
+# Submission validation script
+# File: scripts/validation/check_alignment.py
+# Document alignment validation
 ```
 
 **Quality Gates:**
