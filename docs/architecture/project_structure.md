@@ -1,8 +1,8 @@
 # Legal Document Intelligence Platform - Project Structure
 
-## 🏗️ **Scalable File/Folder Structure**
+## 🏗️ **BigQuery AI-Focused File/Folder Structure**
 
-This document outlines the recommended project structure for the Legal Document Intelligence Platform, organized by deliverables and development phases.
+This document outlines the recommended project structure for the Legal Document Intelligence Platform, optimized for BigQuery AI Hackathon competition success and aligned with the Generative AI track implementation.
 
 ---
 
@@ -26,7 +26,7 @@ bigquery-ai-hackathon/
 ├── 📁 src/                              # Source code
 │   ├── 📁 core/                         # Core platform components
 │   ├── 📁 data/                         # Data processing modules
-│   ├── 📁 ai/                           # AI model implementations
+│   ├── 📁 ai/                           # BigQuery AI model implementations
 │   ├── 📁 api/                          # API endpoints
 │   ├── 📁 ui/                           # User interface components
 │   └── 📁 utils/                        # Utility functions
@@ -60,17 +60,17 @@ bigquery-ai-hackathon/
 │   │   ├── 📄 development.yaml          # Development environment
 │   │   ├── 📄 staging.yaml              # Staging environment
 │   │   └── 📄 production.yaml           # Production environment
-│   ├── 📁 models/                       # AI model configurations
-│   │   ├── 📄 legal_extractor.yaml      # Legal extraction model config
-│   │   ├── 📄 document_summarizer.yaml  # Summarization model config
-│   │   ├── 📄 urgency_detector.yaml     # Urgency detection config
-│   │   ├── 📄 outcome_predictor.yaml    # Outcome prediction config
-│   │   └── 📄 risk_assessor.yaml        # Risk assessment config
+│   ├── 📁 models/                       # BigQuery AI model configurations
+│   │   ├── 📄 legal_extractor.yaml      # AI.GENERATE_TABLE model config
+│   │   ├── 📄 document_summarizer.yaml  # ML.GENERATE_TEXT model config
+│   │   ├── 📄 urgency_detector.yaml     # AI.GENERATE_BOOL model config
+│   │   ├── 📄 outcome_predictor.yaml    # AI.FORECAST model config
+│   │   └── 📄 bigquery_ai_models.yaml   # BigQuery AI models config
 │   └── 📁 bigquery/                     # BigQuery configurations
 │       ├── 📄 dataset_schemas.json      # Dataset schemas
 │       ├── 📄 table_schemas.json        # Table schemas
-│       ├── 📄 model_configs.json        # Model configurations
-│       └── 📄 query_templates.sql       # SQL query templates
+│       ├── 📄 ai_model_configs.json     # BigQuery AI model configurations
+│       └── 📄 ai_query_templates.sql    # BigQuery AI query templates
 │
 ├── 📁 submissions/                      # Competition submissions
 │   ├── 📁 kaggle/                       # Kaggle submission files
@@ -139,10 +139,12 @@ src/
 │
 ├── 📁 core/                            # Core platform components
 │   ├── 📄 __init__.py
-│   ├── 📄 document_processor.py         # Document processing engine
+│   ├── 📄 document_processor.py         # BigQuery AI document processing engine
 │   ├── 📄 similarity_engine.py          # Case law similarity engine
-│   ├── 📄 prediction_engine.py          # Predictive analytics engine
-│   ├── 📄 compliance_monitor.py         # Compliance monitoring
+│   ├── 📄 predictive_engine.py          # BigQuery AI predictive analytics engine
+│   ├── 📄 comprehensive_analyzer.py     # Comprehensive legal analysis engine
+│   ├── 📄 status_tracker.py             # Processing status tracking
+│   ├── 📄 error_handler.py              # Error handling and retry logic
 │   └── 📄 legal_analyzer.py             # Main legal analysis orchestrator
 │
 ├── 📁 data/                            # Data processing modules
@@ -153,18 +155,23 @@ src/
 │   ├── 📄 transformation.py             # Data transformation
 │   └── 📄 storage.py                    # Data storage management
 │
-├── 📁 ai/                              # AI model implementations
+├── 📁 ai/                              # BigQuery AI model implementations
 │   ├── 📄 __init__.py
-│   ├── 📄 models/                       # AI model definitions
+│   ├── 📄 models/                       # BigQuery AI model definitions
 │   │   ├── 📄 __init__.py
-│   │   ├── 📄 legal_extractor.py        # Legal data extraction model
-│   │   ├── 📄 document_summarizer.py    # Document summarization model
-│   │   ├── 📄 urgency_detector.py       # Urgency detection model
-│   │   ├── 📄 outcome_predictor.py      # Case outcome prediction
+│   │   ├── 📄 bigquery_ai_models.py     # BigQuery AI models implementation
+│   │   ├── 📄 simple_ai_models.py       # Simple AI models implementation
+│   │   ├── 📄 legal_extractor.py        # AI.GENERATE_TABLE model
+│   │   ├── 📄 document_summarizer.py    # ML.GENERATE_TEXT model
+│   │   ├── 📄 urgency_detector.py       # AI.GENERATE_BOOL model
+│   │   ├── 📄 outcome_predictor.py      # AI.FORECAST model
 │   │   ├── 📄 risk_assessor.py          # Risk assessment model
 │   │   └── 📄 strategy_generator.py     # Strategy generation model
 │   ├── 📄 embeddings.py                 # Embedding generation
+│   ├── 📄 simple_vector_search.py       # Simple vector search implementation
+│   ├── 📄 vector_search_sql.py          # SQL-based vector search
 │   ├── 📄 vector_search.py              # Vector search implementation
+│   ├── 📄 predictive_analytics.py       # Predictive analytics implementation
 │   └── 📄 model_manager.py              # Model lifecycle management
 │
 ├── 📁 api/                             # API endpoints
@@ -218,24 +225,27 @@ notebooks/
 │   ├── 📄 03_case_law_patterns.ipynb    # Case law pattern discovery
 │   └── 📄 04_data_quality_assessment.ipynb  # Data quality analysis
 │
-├── 📁 prototyping/                      # AI model prototyping
-│   ├── 📄 01_legal_extraction_prototype.ipynb  # Legal data extraction
-│   ├── 📄 02_document_summarization.ipynb      # Summarization models
-│   ├── 📄 03_urgency_detection.ipynb           # Urgency classification
-│   ├── 📄 04_similarity_search.ipynb           # Vector search prototype
-│   ├── 📄 05_outcome_prediction.ipynb          # Outcome prediction
-│   └── 📄 06_risk_assessment.ipynb             # Risk assessment models
+├── 📁 prototyping/                      # BigQuery AI model prototyping
+│   ├── 📄 01_bigquery_ai_setup.ipynb          # BigQuery AI setup and testing
+│   ├── 📄 02_ml_generate_text.ipynb           # ML.GENERATE_TEXT prototyping
+│   ├── 📄 03_ai_generate_table.ipynb          # AI.GENERATE_TABLE prototyping
+│   ├── 📄 04_ai_generate_bool.ipynb           # AI.GENERATE_BOOL prototyping
+│   ├── 📄 05_ai_forecast.ipynb                # AI.FORECAST prototyping
+│   ├── 📄 06_comprehensive_analysis.ipynb     # Comprehensive AI analysis
+│   └── 📄 07_legal_document_ai.ipynb          # Legal document AI integration
 │
 ├── 📁 analysis/                         # Results analysis
-│   ├── 📄 01_model_performance.ipynb    # Model performance analysis
-│   ├── 📄 02_business_impact.ipynb      # Business impact analysis
-│   ├── 📄 03_roi_calculation.ipynb      # ROI calculations
-│   └── 📄 04_competition_metrics.ipynb  # Competition evaluation metrics
+│   ├── 📄 01_bigquery_ai_performance.ipynb  # BigQuery AI performance analysis
+│   ├── 📄 02_ai_function_accuracy.ipynb     # AI function accuracy analysis
+│   ├── 📄 03_business_impact.ipynb          # Business impact analysis
+│   ├── 📄 04_roi_calculation.ipynb          # ROI calculations
+│   └── 📄 05_competition_metrics.ipynb      # Competition evaluation metrics
 │
 └── 📁 demos/                           # Demo notebooks
-    ├── 📄 legal_ai_demo.ipynb           # Main demo notebook
-    ├── 📄 similarity_search_demo.ipynb  # Similarity search demo
-    └── 📄 prediction_demo.ipynb         # Prediction demo
+    ├── 📄 bigquery_ai_demo.ipynb        # Main BigQuery AI demo notebook
+    ├── 📄 legal_document_ai_demo.ipynb  # Legal document AI demo
+    ├── 📄 ai_functions_demo.ipynb       # BigQuery AI functions demo
+    └── 📄 competition_demo.ipynb        # Competition submission demo
 ```
 
 ### **📁 data/ - Data Directory**
@@ -293,15 +303,20 @@ tests/
 │   ├── 📁 core/                        # Core component tests
 │   │   ├── 📄 test_document_processor.py
 │   │   ├── 📄 test_similarity_engine.py
-│   │   └── 📄 test_prediction_engine.py
+│   │   ├── 📄 test_predictive_engine.py
+│   │   ├── 📄 test_comprehensive_analyzer.py
+│   │   ├── 📄 test_status_tracker.py
+│   │   └── 📄 test_error_handler.py
 │   ├── 📁 data/                        # Data processing tests
 │   │   ├── 📄 test_ingestion.py
 │   │   ├── 📄 test_preprocessing.py
 │   │   └── 📄 test_validation.py
-│   ├── 📁 ai/                          # AI model tests
-│   │   ├── 📄 test_models.py
+│   ├── 📁 ai/                          # BigQuery AI model tests
+│   │   ├── 📄 test_bigquery_ai_models.py
+│   │   ├── 📄 test_simple_ai_models.py
 │   │   ├── 📄 test_embeddings.py
-│   │   └── 📄 test_vector_search.py
+│   │   ├── 📄 test_vector_search.py
+│   │   └── 📄 test_predictive_analytics.py
 │   └── 📁 utils/                       # Utility function tests
 │       ├── 📄 test_bigquery_client.py
 │       └── 📄 test_helpers.py
@@ -309,14 +324,15 @@ tests/
 ├── 📁 integration/                     # Integration tests
 │   ├── 📄 __init__.py
 │   ├── 📄 test_api_endpoints.py        # API integration tests
-│   ├── 📄 test_bigquery_integration.py # BigQuery integration tests
-│   ├── 📄 test_ai_pipeline.py          # AI pipeline integration
+│   ├── 📄 test_bigquery_ai_integration.py # BigQuery AI integration tests
+│   ├── 📄 test_ai_pipeline.py          # BigQuery AI pipeline integration
+│   ├── 📄 test_phase3_integration.py   # Phase 3 integration tests
 │   └── 📄 test_end_to_end.py           # End-to-end workflow tests
 │
 ├── 📁 performance/                     # Performance tests
 │   ├── 📄 __init__.py
-│   ├── 📄 test_query_performance.py    # BigQuery performance tests
-│   ├── 📄 test_ai_model_performance.py # AI model performance tests
+│   ├── 📄 test_bigquery_ai_performance.py # BigQuery AI performance tests
+│   ├── 📄 test_ai_function_performance.py # AI function performance tests
 │   ├── 📄 test_api_performance.py      # API performance tests
 │   └── 📄 load_testing.py              # Load testing scripts
 │
@@ -346,12 +362,20 @@ scripts/
 │   ├── 📄 process_documents.py          # Document processing
 │   ├── 📄 generate_embeddings.py        # Embedding generation
 │   ├── 📄 validate_data.py              # Data validation
-│   └── 📄 upload_to_bigquery.py         # BigQuery upload
+│   ├── 📄 upload_to_bigquery.py         # BigQuery upload
+│   └── 📄 test_data_organization.py     # Data organization testing
 │
 ├── 📁 deployment/                      # Deployment scripts
 │   ├── 📄 deploy_to_production.sh       # Production deployment
 │   ├── 📄 create_bigquery_resources.py  # BigQuery resource creation
-│   ├── 📄 deploy_ai_models.py           # AI model deployment
+│   ├── 📄 deploy_ai_models.py           # BigQuery AI model deployment
+│   ├── 📄 deploy_working_ai_models.py   # Working AI models deployment
+│   ├── 📄 test_phase3_components.py     # Phase 3 components testing
+│   ├── 📄 test_phase3_integration.py    # Phase 3 integration testing
+│   ├── 📄 test_predictive_analytics.py  # Predictive analytics testing
+│   ├── 📄 test_simple_ai_models.py      # Simple AI models testing
+│   ├── 📄 test_simple_vector_search.py  # Simple vector search testing
+│   ├── 📄 test_vector_search.py         # Vector search testing
 │   └── 📄 rollback_deployment.sh        # Deployment rollback
 │
 ├── 📁 maintenance/                     # Maintenance scripts
@@ -364,7 +388,11 @@ scripts/
     ├── 📄 final_validation.sh           # Final validation script
     ├── 📄 validate_submission.py        # Submission validation
     ├── 📄 check_alignment.py            # Document alignment check
-    └── 📄 test_ai_models.py             # AI model testing
+    ├── 📄 test_ai_models.py             # AI model testing
+    ├── 📄 phase3_validation_report.py   # Phase 3 validation report
+    ├── 📄 track_alignment_validation.py # Track alignment validation
+    ├── 📄 simple_test_runner.py         # Simple test runner
+    └── 📄 final_test_report.py          # Final test report
 ```
 
 ### **📁 config/ - Configuration Files**
@@ -379,18 +407,19 @@ config/
 │   ├── 📄 production.yaml               # Production environment
 │   └── 📄 testing.yaml                  # Testing environment
 │
-├── 📁 models/                          # AI model configurations
-│   ├── 📄 legal_extractor.yaml          # Legal extraction model config
-│   ├── 📄 document_summarizer.yaml      # Summarization model config
-│   ├── 📄 urgency_detector.yaml         # Urgency detection config
-│   ├── 📄 outcome_predictor.yaml        # Outcome prediction config
-│   └── 📄 risk_assessor.yaml            # Risk assessment config
+├── 📁 models/                          # BigQuery AI model configurations
+│   ├── 📄 legal_extractor.yaml          # AI.GENERATE_TABLE model config
+│   ├── 📄 document_summarizer.yaml      # ML.GENERATE_TEXT model config
+│   ├── 📄 urgency_detector.yaml         # AI.GENERATE_BOOL model config
+│   ├── 📄 outcome_predictor.yaml        # AI.FORECAST model config
+│   ├── 📄 risk_assessor.yaml            # Risk assessment config
+│   └── 📄 bigquery_ai_models.yaml       # BigQuery AI models config
 │
 ├── 📁 bigquery/                        # BigQuery configurations
 │   ├── 📄 dataset_schemas.json          # Dataset schemas
 │   ├── 📄 table_schemas.json            # Table schemas
-│   ├── 📄 model_configs.json            # Model configurations
-│   └── 📄 query_templates.sql           # SQL query templates
+│   ├── 📄 ai_model_configs.json         # BigQuery AI model configurations
+│   └── 📄 ai_query_templates.sql        # BigQuery AI query templates
 │
 └── 📁 monitoring/                      # Monitoring configurations
     ├── 📄 alert_rules.yaml              # Alert rules
@@ -469,10 +498,12 @@ monitoring/
 - **Automation scripts** for common development tasks
 
 ### **📊 Competition Readiness**
+- **BigQuery AI functions** clearly implemented and organized
 - **Submission materials** clearly organized
 - **Demo assets** easily accessible
 - **Documentation** comprehensive and well-structured
 - **Code quality** enforced through proper organization
+- **Track alignment** with Generative AI track requirements
 
 ### **🔄 Maintenance and Scalability**
 - **Monitoring infrastructure** built-in
@@ -540,4 +571,4 @@ make package-submission
 
 ---
 
-**🎯 This structure ensures systematic development, clear deliverables, and maximum competition success while maintaining scalability for future growth.**
+**🎯 This BigQuery AI-focused structure ensures systematic development, clear deliverables, and maximum competition success while maintaining scalability for future growth. The structure is optimized for the Generative AI track and aligns with BigQuery AI Hackathon requirements.**
