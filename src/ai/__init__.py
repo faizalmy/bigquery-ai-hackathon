@@ -6,25 +6,13 @@ This module contains all AI-related functionality for legal document analysis.
 """
 
 from .models import (
-    LegalExtractor,
-    DocumentSummarizer,
-    UrgencyDetector,
-    OutcomePredictor,
-    RiskAssessor,
-    StrategyGenerator
+    BigQueryAIFunctions,
+    BigQueryAIModels,
+    SimpleAIModels
 )
-from .embeddings import DocumentEmbeddingGenerator
-from .vector_search import VectorSearchEngine
-from .model_manager import ModelManager
 
 __all__ = [
-    'LegalExtractor',
-    'DocumentSummarizer',
-    'UrgencyDetector',
-    'OutcomePredictor',
-    'RiskAssessor',
-    'StrategyGenerator',
-    'DocumentEmbeddingGenerator',
-    'VectorSearchEngine',
-    'ModelManager'
+    'BigQueryAIFunctions',
+    'BigQueryAIModels',
+    'SimpleAIModels'
 ]
