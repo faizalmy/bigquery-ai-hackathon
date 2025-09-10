@@ -65,11 +65,13 @@ Legal Documents → BigQuery AI → Intelligence Output
 ```
 bigquery-ai-hackathon/
 ├── docs/                           # Documentation
-│   ├── COMPETITION_REQUIREMENTS.md # Competition details
-│   ├── TRACK_ANALYSIS.md          # Track comparison
-│   ├── LEGAL_DOCUMENT_INTELLIGENCE_PLATFORM.md # Main project doc
-│   ├── LEGAL_DOCUMENT_SOURCES.md  # Data sources guide
-│   └── COMPETITION_COMPARISON.md  # Competition analysis
+│   ├── architecture/               # Project architecture docs
+│   ├── competition/                # Competition-related docs
+│   ├── setup/                      # Setup and configuration guides
+│   ├── data-sources/               # Data source documentation
+│   ├── api/                        # API documentation
+│   ├── deployment/                 # Deployment guides
+│   └── user-guides/                # User documentation
 ├── data/                          # Data directory
 │   └── survey.txt                 # User survey
 ├── src/                          # Source code
@@ -173,11 +175,11 @@ WHERE is_urgent = TRUE;
 
 ## 📚 **Documentation**
 
-- [Competition Requirements](docs/COMPETITION_REQUIREMENTS.md)
-- [Track Analysis](docs/TRACK_ANALYSIS.md)
-- [Legal Document Intelligence Platform](docs/LEGAL_DOCUMENT_INTELLIGENCE_PLATFORM.md)
-- [Legal Document Sources](docs/LEGAL_DOCUMENT_SOURCES.md)
-- [Competition Comparison](docs/COMPETITION_COMPARISON.md)
+- [Competition Requirements](docs/competition/competition_requirements.md)
+- [Track Analysis](docs/competition/track_analysis.md)
+- [Legal Document Intelligence Platform](docs/architecture/legal_document_intelligence_platform.md)
+- [Legal Document Sources](docs/data-sources/legal_document_sources.md)
+- [Competition Comparison](docs/competition/competition_comparison.md)
 
 ## 🏆 **Why This Project Will Win**
 

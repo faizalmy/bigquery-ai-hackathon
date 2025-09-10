@@ -94,14 +94,14 @@ bigquery-ai-hackathon/
 ```
 docs/
 ├── 📄 README.md                         # Documentation index
-├── 📄 IMPLEMENTATION_PHASES.md          # Implementation roadmap
-├── 📄 LEGAL_DOCUMENT_INTELLIGENCE_PLATFORM.md  # Main project doc
-├── 📄 COMPETITION_REQUIREMENTS.md       # Competition details
-├── 📄 TRACK_ANALYSIS.md                 # Track comparison
-├── 📄 LEGAL_DOCUMENT_SOURCES.md         # Data sources guide
-├── 📄 COMPETITION_COMPARISON.md         # Competition analysis
-├── 📄 PROJECT_STRUCTURE.md              # This file
-├── 📄 PHASE_STRUCTURE_ALIGNMENT.md      # Phase-structure cross-reference
+├── 📄 implementation_phases.md          # Implementation roadmap
+├── 📄 legal_document_intelligence_platform.md  # Main project doc
+├── 📄 competition_requirements.md       # Competition details
+├── 📄 track_analysis.md                 # Track comparison
+├── 📄 legal_document_sources.md         # Data sources guide
+├── 📄 competition_comparison.md         # Competition analysis
+├── 📄 project_structure.md              # This file
+├── 📄 phase_structure_alignment.md      # Phase-structure cross-reference
 │
 ├── 📁 architecture/                     # Technical architecture
 │   ├── 📄 system-overview.md            # High-level system design
