@@ -21,7 +21,16 @@ bigquery-ai-hackathon/
 │   ├── 📄 bigquery_client.py           # BigQuery client wrapper
 │   └── 📄 streamlit_app.py             # Streamlit dashboard (UI)
 │
-├── 📁 notebooks/                       # Public notebook (REQUIRED)
+├── 📁 notebooks/                       # Notebooks (REQUIRED)
+│   ├── 📁 development/                 # Development notebooks
+│   │   ├── 📄 01_bigquery_setup.ipynb
+│   │   ├── 📄 02_ml_generate_text.ipynb
+│   │   ├── 📄 03_ai_generate_table.ipynb
+│   │   ├── 📄 04_ai_generate_bool.ipynb
+│   │   ├── 📄 05_ai_forecast.ipynb
+│   │   ├── 📄 06_ml_generate_embedding.ipynb
+│   │   ├── 📄 07_vector_search.ipynb
+│   │   └── 📄 08_create_vector_index.ipynb
 │   └── 📄 competition_demo.ipynb       # Main competition demonstration
 │
 ├── 📁 docs/                            # Documentation
@@ -64,7 +73,18 @@ bigquery-ai-hackathon/
 - Clear documentation and README
 - **Focus**: Code accessibility and organization
 
-#### **3. Demo Materials (OPTIONAL)**
+#### **3. Development Notebooks (DEVELOPMENT)**
+- `notebooks/development/01_bigquery_setup.ipynb` - BigQuery AI setup and testing
+- `notebooks/development/02_ml_generate_text.ipynb` - ML.GENERATE_TEXT function
+- `notebooks/development/03_ai_generate_table.ipynb` - AI.GENERATE_TABLE function
+- `notebooks/development/04_ai_generate_bool.ipynb` - AI.GENERATE_BOOL function
+- `notebooks/development/05_ai_forecast.ipynb` - AI.FORECAST function
+- `notebooks/development/06_ml_generate_embedding.ipynb` - ML.GENERATE_EMBEDDING function
+- `notebooks/development/07_vector_search.ipynb` - VECTOR_SEARCH function
+- `notebooks/development/08_create_vector_index.ipynb` - CREATE VECTOR INDEX function
+- **Focus**: Development and testing of BigQuery AI functions
+
+#### **4. Demo Materials (OPTIONAL)**
 - `submissions/demo/demo_video.mp4` - Demo video
 - `submissions/demo/screenshots/` - Platform screenshots
 - **Focus**: Solution demonstration and clarity
@@ -87,6 +107,18 @@ bigquery-ai-hackathon/
 
 #### **Hybrid Approach**
 - `src/hybrid_pipeline.py` - Combined Track 1 + Track 2
+
+#### **Development Notebooks**
+- `notebooks/development/01_bigquery_setup.ipynb` - BigQuery AI setup and testing
+- `notebooks/development/02_ml_generate_text.ipynb` - ML.GENERATE_TEXT function
+- `notebooks/development/03_ai_generate_table.ipynb` - AI.GENERATE_TABLE function
+- `notebooks/development/04_ai_generate_bool.ipynb` - AI.GENERATE_BOOL function
+- `notebooks/development/05_ai_forecast.ipynb` - AI.FORECAST function
+- `notebooks/development/06_ml_generate_embedding.ipynb` - ML.GENERATE_EMBEDDING function
+- `notebooks/development/07_vector_search.ipynb` - VECTOR_SEARCH function
+- `notebooks/development/08_create_vector_index.ipynb` - CREATE VECTOR INDEX function
+
+#### **Competition Demo**
 - `notebooks/competition_demo.ipynb` - Public demonstration
 
 #### **User Interface**
