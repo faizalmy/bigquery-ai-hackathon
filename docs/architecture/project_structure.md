@@ -146,15 +146,8 @@ src/
 │   ├── 📄 __init__.py
 │   ├── 📁 models/                       # BigQuery AI model definitions
 │   │   ├── 📄 __init__.py
-│   │   ├── 📄 bigquery_ai_models.py     # BigQuery AI models implementation
-│   │   ├── 📄 simple_ai_models.py       # Simple AI models implementation
-│   │   ├── 📄 legal_extractor.py        # AI.GENERATE_TABLE model
-│   │   ├── 📄 document_summarizer.py    # ML.GENERATE_TEXT model
-│   │   ├── 📄 urgency_detector.py       # AI.GENERATE_BOOL model
-│   │   ├── 📄 outcome_predictor.py      # AI.FORECAST model
-│   │   └── 📄 risk_assessor.py          # Risk assessment model
+│   │   └── 📄 bigquery_ai_functions.py  # All BigQuery AI functions implementation
 │   ├── 📄 simple_vector_search.py       # Simple vector search implementation
-│   ├── 📄 vector_search_sql.py          # SQL-based vector search
 │   └── 📄 predictive_analytics.py       # Predictive analytics implementation
 │
 └── 📁 utils/                           # Utility functions
@@ -244,10 +237,7 @@ tests/
 │   │   ├── 📄 test_preprocessing.py
 │   │   └── 📄 test_validation.py
 │   ├── 📁 ai/                          # BigQuery AI model tests
-│   │   ├── 📄 test_bigquery_ai_models.py
-│   │   ├── 📄 test_simple_ai_models.py
-│   │   ├── 📄 test_embeddings.py
-│   │   ├── 📄 test_vector_search.py
+│   │   ├── 📄 test_bigquery_ai_functions.py
 │   │   └── 📄 test_predictive_analytics.py
 │   └── 📁 utils/                       # Utility function tests
 │       ├── 📄 test_bigquery_client.py
