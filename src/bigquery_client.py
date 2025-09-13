@@ -59,11 +59,18 @@ class BigQueryClient:
         try:
             project_id = self.config['project']['id']
 
-            # Initialize BigQuery client
-            self.client = bigquery.Client(project=project_id)
+            # Get location from config
+            location = self.config.get('bigquery', {}).get('location', 'US')
 
-            # Initialize BigFrames session
-            self.bigframes_session = bigframes.connect()
+            # Initialize BigQuery client with explicit location
+            self.client = bigquery.Client(project=project_id, location=location)
+
+            # Initialize BigFrames session with explicit location
+            # Suppress the DefaultLocationWarning since we're using US location
+            import warnings
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", message="No explicit location is set, so using location US for the session.")
+                self.bigframes_session = bigframes.connect()
 
             # Test connection by listing datasets
             list(self.client.list_datasets(max_results=1))
