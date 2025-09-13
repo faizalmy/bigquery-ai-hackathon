@@ -1,38 +1,46 @@
-# BigQuery AI Flow Specifications
+# BigQuery AI Flow Specifications - Dual-Track Approach
 
 ## 📋 **Document Overview**
 
-**Standard**: BigQuery AI Best Practices and Google Cloud Standards
-**Purpose**: Comprehensive BigQuery AI function flow documentation
-**Scope**: Complete BigQuery AI integration for Legal Document Intelligence Platform
+**Purpose**: Comprehensive BigQuery AI function flow documentation for dual-track legal document processing
+**Scope**: Complete BigQuery AI integration for Track 1 (Generative AI) + Track 2 (Vector Search) with BigQuery native embeddings
 
 ---
 
-## 🤖 **BigQuery AI Architecture Overview**
+## 🤖 **Dual-Track BigQuery AI Architecture Overview**
 
-### **BigQuery AI Function Integration**
+### **Track 1: Generative AI + Track 2: Vector Search Integration**
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    BigQuery AI Integration Layer                │
+│                    Dual-Track BigQuery AI Integration Layer     │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────┐    ┌─────────────────────┐    ┌─────────────┐ │
-│  │   Document  │───▶│   AI Function       │───▶│   AI        │ │
-│  │   Content   │    │   Router            │    │   Results   │ │
-│  └─────────────┘    └─────────────────────┘    └─────────────┘ │
-│         │                       │                       │      │
-│         │                       │                       │      │
+│  │   Input     │    │   Track 1: Gen AI   │    │   Track 1   │ │
+│  │  Documents  │───▶│   ML.GENERATE_TEXT  │───▶│  Results    │ │
+│  └─────────────┘    │   AI.GENERATE_TABLE │    └─────────────┘ │
+│                     │   AI.GENERATE_BOOL  │                    │
+│                     │   AI.FORECAST       │                    │
+│                     └─────────────────────┘                    │
+│                                                                 │
 │  ┌─────────────┐    ┌─────────────────────┐    ┌─────────────┐ │
-│  │   ML        │◀───│   AI Function       │◀───│   AI        │ │
-│  │   Models    │    │   Executor          │    │   Processing│ │
-│  └─────────────┘    └─────────────────────┘    └─────────────┘ │
+│  │   Input     │    │   Track 2: Vector   │    │   Track 2   │ │
+│  │  Documents  │───▶│   BigQuery AI       │───▶│  Results    │ │
+│  └─────────────┘    │   VECTOR_SEARCH     │    └─────────────┘ │
+│                     │   VECTOR_DISTANCE   │                    │
+│                     │   CREATE VECTOR IDX │                    │
+│                     └─────────────────────┘                    │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │              Hybrid Pipeline: Combined Intelligence         │ │
+│  └─────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🔧 **BigQuery AI Function Specifications**
+## 🔧 **Track 1: Generative AI Function Specifications**
 
 ### **Function 1: ML.GENERATE_TEXT - Document Summarization**
 
@@ -380,6 +388,165 @@ ERROR_HANDLING:
 - Retry Attempts: 2 with exponential backoff
 - Fallback: Statistical prediction model
 - Quality Threshold: 0.75 confidence score
+```
+
+---
+
+## 🔍 **Track 2: Vector Search Function Specifications**
+
+### **Function 5: ML.GENERATE_EMBEDDING - Document Embeddings**
+
+**PURPOSE**: Generate document embeddings for vector search
+**MODEL**: text-embedding-preview-0409
+**INPUT**: Document content
+**OUTPUT**: 1024-dimensional embedding vector
+**PERFORMANCE**: < 2 seconds per document
+
+**SQL IMPLEMENTATION:**
+```sql
+-- Generate embeddings using BigQuery
+SELECT
+  document_id,
+  ML.GENERATE_EMBEDDING(
+    MODEL `text-embedding-preview-0409`,
+    content
+  ) as embedding
+FROM `legal_ai_platform.legal_documents`
+WHERE document_id = @document_id
+```
+
+### **Function 6: VECTOR_SEARCH - Similarity Search**
+
+**PURPOSE**: Find similar documents using vector search
+**INPUT**: Query embedding and search parameters
+**OUTPUT**: Similar documents with similarity scores
+**PERFORMANCE**: < 1 second for top-10 results
+
+**SQL IMPLEMENTATION:**
+```sql
+-- Find similar legal documents
+SELECT
+  document_id,
+  content,
+  VECTOR_SEARCH(
+    query_embedding,
+    document_embedding,
+    top_k => 10
+  ) as similar_documents
+FROM `legal_ai_platform.legal_documents_with_embeddings`
+WHERE document_id = @query_document_id
+```
+
+### **Function 7: VECTOR_DISTANCE - Distance Calculation**
+
+**PURPOSE**: Calculate distance between document embeddings
+**INPUT**: Two document embeddings
+**OUTPUT**: Cosine similarity distance
+**PERFORMANCE**: < 500ms per comparison
+
+**SQL IMPLEMENTATION:**
+```sql
+-- Calculate similarity between documents
+SELECT
+  target_doc.document_id,
+  VECTOR_DISTANCE(
+    target_doc.embedding,
+    source_doc.embedding,
+    'COSINE'
+  ) as similarity_score
+FROM `legal_ai_platform.legal_documents_with_embeddings` target_doc
+CROSS JOIN `legal_ai_platform.legal_documents_with_embeddings` source_doc
+WHERE source_doc.document_id = @query_document_id
+ORDER BY similarity_score DESC
+LIMIT 10
+```
+
+### **Function 8: CREATE VECTOR INDEX - Performance Optimization**
+
+**PURPOSE**: Create vector index for fast similarity search
+**INPUT**: Embedding column and index parameters
+**OUTPUT**: Optimized vector index
+**PERFORMANCE**: < 5 minutes for 1M documents
+
+**SQL IMPLEMENTATION:**
+```sql
+-- Create vector index for performance
+CREATE VECTOR INDEX legal_documents_index
+ON `legal_ai_platform.legal_documents_with_embeddings`(embedding)
+OPTIONS(
+  index_type = 'IVF',
+  distance_type = 'COSINE'
+)
+```
+
+### **BigQuery Native Embeddings**
+
+**PURPOSE**: Generate optimized embeddings using BigQuery native functions
+**MODEL**: text-embedding-preview-0409
+**INPUT**: Legal document content
+**OUTPUT**: 1024-dimensional embeddings
+**PERFORMANCE**: < 2 seconds per document
+
+**BigQuery Implementation:**
+```sql
+-- Native BigQuery embedding generation
+ML.GENERATE_EMBEDDING(
+  MODEL `text-embedding-preview-0409`,
+  content
+) as embedding
+```
+
+---
+
+## 🔗 **Hybrid Pipeline: Combined Track 1 + Track 2**
+
+### **Complete Legal Document Analysis Pipeline**
+
+**SQL IMPLEMENTATION:**
+```sql
+-- Hybrid legal intelligence pipeline
+WITH processed_documents AS (
+  -- Track 1: Generate summaries and extract data
+  SELECT
+    document_id,
+    content,
+    document_type,
+    case_outcome,
+    jurisdiction,
+    ML.GENERATE_TEXT(MODEL `gemini-pro`, content) as summary,
+    AI.GENERATE_TABLE(MODEL `gemini-pro`, content, schema) as legal_data,
+    AI.GENERATE_BOOL(MODEL `gemini-pro`, content) as is_urgent,
+    AI.FORECAST(MODEL `gemini-pro`, historical_outcomes, 1) as predicted_outcome
+  FROM `legal_ai_platform.legal_documents`
+),
+similarity_analysis AS (
+  -- Track 2: Find similar cases using BigQuery embeddings
+  SELECT
+    doc1.document_id as query_doc,
+    doc2.document_id as similar_doc,
+    VECTOR_DISTANCE(
+      doc1.embedding,
+      doc2.embedding,
+      'COSINE'
+    ) as similarity_score
+  FROM `legal_ai_platform.legal_documents_with_embeddings` doc1
+  CROSS JOIN `legal_ai_platform.legal_documents_with_embeddings` doc2
+  WHERE doc1.document_id != doc2.document_id
+    AND doc1.jurisdiction = doc2.jurisdiction
+)
+-- Combined Intelligence Output
+SELECT
+  p.document_id,
+  p.summary,
+  p.legal_data,
+  p.is_urgent,
+  p.predicted_outcome,
+  s.similar_doc,
+  s.similarity_score
+FROM processed_documents p
+LEFT JOIN similarity_analysis s ON p.document_id = s.query_doc
+WHERE s.similarity_score > 0.8
+ORDER BY s.similarity_score DESC
 ```
 
 ---

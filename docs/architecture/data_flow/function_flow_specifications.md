@@ -7,7 +7,7 @@
 
 ---
 
-## 🔧 **BigQuery AI Function Specifications**
+## 🔧 **Track 1: Generative AI Function Specifications**
 
 ### **Function 1: ML.GENERATE_TEXT - Document Summarization**
 
@@ -152,81 +152,170 @@ SELECT
 **OUTPUT**: Predicted outcome with confidence score
 **PERFORMANCE**: < 10 seconds per prediction
 
+---
+
+## 🔍 **Track 2: Vector Search Function Specifications**
+
+### **Function 5: ML.GENERATE_EMBEDDING - Document Embeddings**
+
+**PURPOSE**: Generate document embeddings for vector search
+**INPUT**: Document content
+**OUTPUT**: 1024-dimensional embedding vector
+**PERFORMANCE**: < 2 seconds per document
+
 **SQL IMPLEMENTATION:**
 ```sql
--- Predict case outcomes based on historical data
+-- Generate embeddings using BigQuery
 SELECT
-  current_case.document_id,
-  AI.FORECAST(
-    MODEL `gemini-pro`,
-    historical_outcomes,
-    1  -- Predict next outcome
-  ) as predicted_outcome
-FROM (
-  SELECT
-    document_id,
-    legal_issues,
-    case_type,
-    jurisdiction,
-    ARRAY_AGG(
-      STRUCT(
-        case_date,
-        outcome,
-        confidence_score
-      ) ORDER BY case_date DESC
-    ) as historical_outcomes
-  FROM `legal_ai_platform.processed_data.legal_documents`
-  WHERE case_type = @current_case_type
-    AND jurisdiction = @current_jurisdiction
-    AND case_date < @current_case_date
-  GROUP BY document_id, legal_issues, case_type, jurisdiction
-) historical_data
-CROSS JOIN (
-  SELECT
-    document_id,
-    legal_issues,
-    case_type,
-    jurisdiction,
-    case_date
-  FROM `legal_ai_platform.processed_data.legal_documents`
-  WHERE document_id = @document_id
-) current_case
-WHERE historical_data.legal_issues = current_case.legal_issues
+  document_id,
+  ML.GENERATE_EMBEDDING(
+    MODEL `text-embedding-preview-0409`,
+    content
+  ) as embedding
+FROM `legal_ai_platform.legal_documents`
+WHERE document_id = @document_id
 ```
 
-**EXAMPLE:**
+### **Function 6: VECTOR_SEARCH - Similarity Search**
+
+**PURPOSE**: Find similar documents using vector search
+**INPUT**: Query embedding and search parameters
+**OUTPUT**: Similar documents with similarity scores
+**PERFORMANCE**: < 1 second for top-10 results
+
+**SQL IMPLEMENTATION:**
 ```sql
--- Input: Current case data with historical outcomes
--- Output: Predicted case outcome
+-- Find similar legal documents
 SELECT
-  'case_001' as document_id,
-  AI.FORECAST(
-    MODEL `gemini-pro`,
-    [
-      STRUCT('2024-01-01' as case_date, 'favorable' as outcome, 0.85 as confidence_score),
-      STRUCT('2024-01-15' as case_date, 'unfavorable' as outcome, 0.78 as confidence_score)
-    ],
-    1
-  ) as predicted_outcome
+  document_id,
+  content,
+  VECTOR_SEARCH(
+    query_embedding,
+    document_embedding,
+    top_k => 10
+  ) as similar_documents
+FROM `legal_ai_platform.legal_documents_with_embeddings`
+WHERE document_id = @query_document_id
 ```
 
-**RESULT:**
-```json
-{
-  "document_id": "case_001",
-  "predicted_outcome": "favorable"
-}
+### **Function 7: VECTOR_DISTANCE - Distance Calculation**
+
+**PURPOSE**: Calculate distance between document embeddings
+**INPUT**: Two document embeddings
+**OUTPUT**: Cosine similarity distance
+**PERFORMANCE**: < 500ms per comparison
+
+**SQL IMPLEMENTATION:**
+```sql
+-- Calculate similarity between documents
+SELECT
+  target_doc.document_id,
+  VECTOR_DISTANCE(
+    target_doc.embedding,
+    source_doc.embedding,
+    'COSINE'
+  ) as similarity_score
+FROM `legal_ai_platform.legal_documents_with_embeddings` target_doc
+CROSS JOIN `legal_ai_platform.legal_documents_with_embeddings` source_doc
+WHERE source_doc.document_id = @query_document_id
+ORDER BY similarity_score DESC
+LIMIT 10
+```
+
+### **Function 8: CREATE VECTOR INDEX - Performance Optimization**
+
+**PURPOSE**: Create vector index for fast similarity search
+**INPUT**: Embedding column and index parameters
+**OUTPUT**: Optimized vector index
+**PERFORMANCE**: < 5 minutes for 1M documents
+
+**SQL IMPLEMENTATION:**
+```sql
+-- Create vector index for performance
+CREATE VECTOR INDEX legal_documents_index
+ON `legal_ai_platform.legal_documents_with_embeddings`(embedding)
+OPTIONS(
+  index_type = 'IVF',
+  distance_type = 'COSINE'
+)
+```
+
+### **Embedding Strategy: BigQuery Native Approach**
+
+**PURPOSE**: Use BigQuery's native embedding generation for optimal competition alignment
+**MODEL**: text-embedding-preview-0409 (BigQuery native)
+**INPUT**: Legal document content
+**OUTPUT**: 1024-dimensional embeddings
+**PERFORMANCE**: < 2 seconds per document
+
+**Rationale for BigQuery-Only Approach:**
+- **Competition Alignment**: Uses BigQuery's native AI functions (required)
+- **Simplicity**: Single embedding approach reduces complexity
+- **Cost Efficiency**: No external model costs or dependencies
+- **Implementation Speed**: Faster to implement and test
+- **BigQuery Integration**: Seamless integration with VECTOR_SEARCH functions
+
+
+---
+
+## 🔗 **Hybrid Pipeline: Combined Track 1 + Track 2**
+
+### **Complete Legal Document Analysis Pipeline**
+
+**SQL IMPLEMENTATION:**
+```sql
+-- Hybrid legal intelligence pipeline
+WITH processed_documents AS (
+  -- Track 1: Generate summaries and extract data
+  SELECT
+    document_id,
+    content,
+    document_type,
+    case_outcome,
+    jurisdiction,
+    ML.GENERATE_TEXT(MODEL `gemini-pro`, content) as summary,
+    AI.GENERATE_TABLE(MODEL `gemini-pro`, content, schema) as legal_data,
+    AI.GENERATE_BOOL(MODEL `gemini-pro`, content) as is_urgent,
+    AI.FORECAST(MODEL `gemini-pro`, historical_outcomes, 1) as predicted_outcome
+  FROM `legal_ai_platform.legal_documents`
+),
+similarity_analysis AS (
+  -- Track 2: Find similar cases using BigQuery embeddings
+  SELECT
+    doc1.document_id as query_doc,
+    doc2.document_id as similar_doc,
+    VECTOR_DISTANCE(
+      doc1.embedding,
+      doc2.embedding,
+      'COSINE'
+    ) as similarity_score
+  FROM `legal_ai_platform.legal_documents_with_embeddings` doc1
+  CROSS JOIN `legal_ai_platform.legal_documents_with_embeddings` doc2
+  WHERE doc1.document_id != doc2.document_id
+    AND doc1.jurisdiction = doc2.jurisdiction
+)
+-- Combined Intelligence Output
+SELECT
+  p.document_id,
+  p.summary,
+  p.legal_data,
+  p.is_urgent,
+  p.predicted_outcome,
+  s.similar_doc,
+  s.similarity_score
+FROM processed_documents p
+LEFT JOIN similarity_analysis s ON p.document_id = s.query_doc
+WHERE s.similarity_score > 0.8
+ORDER BY s.similarity_score DESC
 ```
 
 ---
 
-## 📊 **BigQuery AI Function Performance**
+## 📊 **Dual-Track Function Performance**
 
 ### **Performance Targets:**
-- **ML.GENERATE_TEXT**: < 5 seconds per document
-- **AI.GENERATE_TABLE**: < 8 seconds per document
-- **AI.GENERATE_BOOL**: < 3 seconds per document
-- **AI.FORECAST**: < 10 seconds per prediction
+- **Track 1 Functions**: ML.GENERATE_TEXT, AI.GENERATE_TABLE, AI.GENERATE_BOOL, AI.FORECAST
+- **Track 2 Functions**: ML.GENERATE_EMBEDDING, VECTOR_SEARCH, VECTOR_DISTANCE, CREATE VECTOR INDEX
 
 ### **Success Rate Targets:**
 - **Overall Success Rate**: > 95%
@@ -237,12 +326,14 @@ SELECT
 
 ## 🔍 **Testing Requirements**
 
-### **BigQuery AI Function Testing:**
-- Test all 4 BigQuery AI functions with sample legal documents
+### **Dual-Track Function Testing:**
+- Test all 8 BigQuery AI functions (Track 1 + Track 2) with sample legal documents
+- Validate BigQuery embedding generation and integration
+- Test hybrid pipeline combining both tracks
 - Validate function outputs and performance
 - Test error handling and edge cases
 - Verify competition submission requirements
 
 ---
 
-*This document provides BigQuery AI function specifications for the Legal Document Intelligence Platform competition submission.*
+*This document provides comprehensive dual-track BigQuery AI function specifications for the Legal Document Intelligence Platform competition submission.*
