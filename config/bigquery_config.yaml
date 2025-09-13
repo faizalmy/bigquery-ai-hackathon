@@ -45,7 +45,7 @@ tables:
         mode: "REQUIRED"
         description: "Unique document identifier"
       - name: "content"
-        type: "TEXT"
+        type: "STRING"
         mode: "REQUIRED"
         description: "Full document content"
       - name: "document_type"
@@ -78,8 +78,8 @@ tables:
         mode: "REQUIRED"
         description: "Reference to legal_documents.document_id"
       - name: "embedding"
-        type: "ARRAY<FLOAT64>"
-        mode: "REQUIRED"
+        type: "FLOAT64"
+        mode: "REPEATED"
         description: "Document embedding vector"
       - name: "model_name"
         type: "STRING"
@@ -165,12 +165,12 @@ ai_models:
     top_p: 0.8
     top_k: 40
     description: "Gemini Pro model for text generation and analysis"
-  
+
   text_embedding:
     model_name: "text-embedding-preview-0409"
     dimensions: 768
     description: "Text embedding model for vector search"
-  
+
   timesfm:
     model_name: "timesfm"
     description: "Time series forecasting model for AI.FORECAST"
@@ -193,13 +193,13 @@ processing:
   max_retries: 3
   timeout_seconds: 300
   concurrent_requests: 5
-  
+
   # Track 1 (Generative AI) Settings
   track1:
     max_tokens_per_request: 2048
     temperature: 0.1
     timeout_seconds: 60
-    
+
   # Track 2 (Vector Search) Settings
   track2:
     embedding_batch_size: 50
@@ -232,7 +232,7 @@ security:
     - "roles/bigquery.dataEditor"
     - "roles/bigquery.jobUser"
     - "roles/ml.developer"
-  
+
   encryption:
     default_kms_key: null
     customer_managed_encryption: false
@@ -248,7 +248,7 @@ environments:
     monitoring:
       enabled: true
       log_level: "DEBUG"
-  
+
   staging:
     project:
       id: "faizal-hackathon-staging"
@@ -258,7 +258,7 @@ environments:
     monitoring:
       enabled: true
       log_level: "INFO"
-  
+
   production:
     project:
       id: "faizal-hackathon-prod"

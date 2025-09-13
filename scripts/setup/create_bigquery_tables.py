@@ -141,7 +141,9 @@ class BigQuerySetup:
         try:
             # Check if table already exists
             project_id = self.config['project']['id']
-            table_id = f"{project_id}.{table_config['dataset']}.{table_name}"
+            # Fix dataset name format (remove dots, use underscores)
+            dataset_name = table_config['dataset'].replace('.', '_')
+            table_id = f"{project_id}.{dataset_name}.{table_name}"
 
             if self.client._table_exists(table_id):
                 logger.info(f"Table {table_id} already exists")
