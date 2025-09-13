@@ -12,6 +12,7 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime
 from dataclasses import dataclass
 
+from ai.models.bigquery_ai_functions import BigQueryAIFunctions
 from ai.models.simple_ai_models import SimpleAIModels
 from ai.simple_vector_search import SimpleVectorSearch
 from ai.predictive_analytics import PredictiveAnalytics
@@ -47,6 +48,7 @@ class LegalDocumentProcessor:
         self.bq_client = bq_client
 
         # Initialize Phase 2 components
+        self.bigquery_ai_functions = BigQueryAIFunctions(project_id)
         self.ai_models = SimpleAIModels(project_id)
         self.vector_search = SimpleVectorSearch(project_id)
         self.predictive_analytics = PredictiveAnalytics(project_id)
@@ -167,6 +169,152 @@ class LegalDocumentProcessor:
 
         return result
 
+    def extract_legal_data_with_ai(self, document: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Extract legal data using AI.GENERATE_TABLE (Task 3.2).
+
+        Args:
+            document: Legal document dictionary
+
+        Returns:
+            Legal data extraction result
+        """
+        logger.info(f"🔍 Extracting legal data with AI.GENERATE_TABLE for document: {document.get('document_id', 'unknown')}")
+
+        try:
+            result = self.bigquery_ai_functions.extract_legal_data(document)
+            logger.info(f"✅ Legal data extraction completed for document: {document.get('document_id', 'unknown')}")
+            return result
+        except Exception as e:
+            logger.error(f"❌ Legal data extraction failed: {e}")
+            return {
+                'document_id': document.get('document_id'),
+                'error': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
+
+    def generate_summary_with_ai(self, document: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generate summary using ML.GENERATE_TEXT (Task 3.3).
+
+        Args:
+            document: Legal document dictionary
+
+        Returns:
+            Document summary result
+        """
+        logger.info(f"📝 Generating summary with ML.GENERATE_TEXT for document: {document.get('document_id', 'unknown')}")
+
+        try:
+            result = self.bigquery_ai_functions.generate_document_summary(document)
+            logger.info(f"✅ Summary generation completed for document: {document.get('document_id', 'unknown')}")
+            return result
+        except Exception as e:
+            logger.error(f"❌ Summary generation failed: {e}")
+            return {
+                'document_id': document.get('document_id'),
+                'error': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
+
+    def detect_urgency_with_ai(self, document: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Detect urgency using AI.GENERATE_BOOL (Task 3.4).
+
+        Args:
+            document: Legal document dictionary
+
+        Returns:
+            Urgency detection result
+        """
+        logger.info(f"⚡ Detecting urgency with AI.GENERATE_BOOL for document: {document.get('document_id', 'unknown')}")
+
+        try:
+            result = self.bigquery_ai_functions.detect_urgency(document)
+            logger.info(f"✅ Urgency detection completed for document: {document.get('document_id', 'unknown')}")
+            return result
+        except Exception as e:
+            logger.error(f"❌ Urgency detection failed: {e}")
+            return {
+                'document_id': document.get('document_id'),
+                'error': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
+
+    def forecast_case_outcome_with_ai(self, document: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Forecast case outcome using AI.FORECAST.
+
+        Args:
+            document: Legal document dictionary
+
+        Returns:
+            Case outcome forecast result
+        """
+        logger.info(f"🔮 Forecasting case outcome with AI.FORECAST for document: {document.get('document_id', 'unknown')}")
+
+        try:
+            # Convert document to case data format for forecasting
+            case_data = {
+                'case_id': document.get('document_id', 'unknown'),
+                'content': document.get('content', ''),
+                'document_type': document.get('document_type', 'case_file'),
+                'metadata': document.get('metadata', {})
+            }
+
+            result = self.bigquery_ai_functions.forecast_case_outcome(case_data)
+            logger.info(f"✅ Case outcome forecasting completed for document: {document.get('document_id', 'unknown')}")
+            return result
+        except Exception as e:
+            logger.error(f"❌ Case outcome forecasting failed: {e}")
+            return {
+                'document_id': document.get('document_id'),
+                'error': str(e),
+                'timestamp': datetime.now().isoformat()
+            }
+
+    def _run_bigquery_ai_processing(self, document: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Run all BigQuery AI functions on the document.
+
+        Args:
+            document: Legal document dictionary
+
+        Returns:
+            Combined results from all BigQuery AI functions
+        """
+        logger.info(f"🤖 Running BigQuery AI processing for document: {document.get('document_id', 'unknown')}")
+
+        try:
+            # Run all BigQuery AI functions
+            summary_result = self.generate_summary_with_ai(document)
+            extraction_result = self.extract_legal_data_with_ai(document)
+            urgency_result = self.detect_urgency_with_ai(document)
+            forecast_result = self.forecast_case_outcome_with_ai(document)
+
+            # Combine results
+            combined_result = {
+                'document_id': document.get('document_id'),
+                'summary': summary_result,
+                'extraction': extraction_result,
+                'urgency': urgency_result,
+                'forecast': forecast_result,
+                'processing_timestamp': datetime.now().isoformat(),
+                'success': True
+            }
+
+            logger.info(f"✅ BigQuery AI processing completed for document: {document.get('document_id', 'unknown')}")
+            return combined_result
+
+        except Exception as e:
+            logger.error(f"❌ BigQuery AI processing failed: {e}")
+            return {
+                'document_id': document.get('document_id'),
+                'error': str(e),
+                'processing_timestamp': datetime.now().isoformat(),
+                'success': False
+            }
+
     def process_batch(self, documents: List[Dict[str, Any]]) -> List[ProcessingResult]:
         """
         Process multiple documents in batch.
@@ -250,12 +398,16 @@ class LegalDocumentProcessor:
         """Run all Phase 2 AI models on the document."""
         content = document['content']
 
-        # Run AI models
+        # Run BigQuery AI functions (Phase 3.1 integration)
+        bigquery_ai_results = self._run_bigquery_ai_processing(document)
+
+        # Run legacy AI models for compatibility
         extraction_result = self.ai_models.extract_legal_data(self.bq_client, content)
         summarization_result = self.ai_models.summarize_document(self.bq_client, content)
         classification_result = self.ai_models.classify_document(self.bq_client, content)
 
         return {
+            'bigquery_ai_functions': bigquery_ai_results,
             'legal_extraction': extraction_result,
             'document_summarization': summarization_result,
             'document_classification': classification_result,
