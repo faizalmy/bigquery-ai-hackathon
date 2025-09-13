@@ -10,6 +10,22 @@ notebook==7.4.5
 scikit-learn==1.7.2
 kaggle==1.7.4.5
 
+# Configuration and setup
+PyYAML==6.0.1
+
+# Testing dependencies
+pytest==8.3.3
+pytest-cov==6.0.0
+
+# Code formatting and linting
+black==24.10.0
+isort==5.13.2
+flake8==7.1.1
+mypy==1.13.0
+
+# Streamlit for UI
+streamlit==1.41.0
+
 # Additional useful packages
 plotly==5.24.1
 openpyxl==3.1.5

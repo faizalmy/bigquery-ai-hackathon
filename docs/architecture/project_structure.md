@@ -21,6 +21,12 @@ bigquery-ai-hackathon/
 │   ├── 📄 bigquery_client.py           # BigQuery client wrapper
 │   └── 📄 streamlit_app.py             # Streamlit dashboard (UI)
 │
+├── 📁 scripts/                         # Setup and automation scripts
+│   └── 📁 setup/                       # BigQuery setup scripts
+│       ├── 📄 bigquery_setup.sh        # BigQuery project setup
+│       ├── 📄 create_bigquery_tables.py # Dataset and table creation
+│       └── 📄 test_bigquery_setup.py   # Setup validation
+│
 ├── 📁 notebooks/                       # Notebooks (REQUIRED)
 │   ├── 📁 development/                 # Development notebooks
 │   │   ├── 📄 01_bigquery_setup.ipynb
@@ -127,6 +133,11 @@ bigquery-ai-hackathon/
 - Real-time BigQuery AI function results
 - Visualization of legal insights and predictions
 
+#### **Setup and Automation**
+- `scripts/setup/bigquery_setup.sh` - BigQuery project setup and API enablement
+- `scripts/setup/create_bigquery_tables.py` - Dataset and table creation
+- `scripts/setup/test_bigquery_setup.py` - Comprehensive setup validation
+
 ---
 
 ## 🚀 **Competition Optimization Benefits**
@@ -168,8 +179,14 @@ cd bigquery-ai-hackathon
 # Install dependencies
 pip install -r requirements.txt
 
-# Setup BigQuery
-python src/bigquery_client.py --setup
+# Setup BigQuery project and APIs
+./scripts/setup/bigquery_setup.sh
+
+# Create datasets and tables
+python scripts/setup/create_bigquery_tables.py
+
+# Validate setup
+python scripts/setup/test_bigquery_setup.py
 
 # Run Streamlit dashboard
 streamlit run src/streamlit_app.py
