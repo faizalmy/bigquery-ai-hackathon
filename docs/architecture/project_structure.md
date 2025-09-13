@@ -18,7 +18,8 @@ bigquery-ai-hackathon/
 │   ├── 📄 bigquery_ai_functions.py     # Track 1: 4 BigQuery AI functions
 │   ├── 📄 vector_search.py             # Track 2: 4 Vector search functions
 │   ├── 📄 hybrid_pipeline.py           # Combined dual-track approach
-│   └── 📄 bigquery_client.py           # BigQuery client wrapper
+│   ├── 📄 bigquery_client.py           # BigQuery client wrapper
+│   └── 📄 streamlit_app.py             # Streamlit dashboard (UI)
 │
 ├── 📁 notebooks/                       # Public notebook (REQUIRED)
 │   └── 📄 competition_demo.ipynb       # Main competition demonstration
@@ -39,7 +40,8 @@ bigquery-ai-hackathon/
 ├── 📁 tests/                           # Basic testing
 │   ├── 📄 test_bigquery_ai.py          # Track 1 function tests
 │   ├── 📄 test_vector_search.py        # Track 2 function tests
-│   └── 📄 test_hybrid_pipeline.py      # Combined pipeline tests
+│   ├── 📄 test_hybrid_pipeline.py      # Combined pipeline tests
+│   └── 📄 test_streamlit_app.py        # Streamlit UI tests
 │
 └── 📁 config/                          # Essential configuration
     └── 📄 bigquery_config.yaml         # BigQuery configuration
@@ -87,6 +89,12 @@ bigquery-ai-hackathon/
 - `src/hybrid_pipeline.py` - Combined Track 1 + Track 2
 - `notebooks/competition_demo.ipynb` - Public demonstration
 
+#### **User Interface**
+- `src/streamlit_app.py` - Streamlit dashboard for AI demonstration
+- Interactive document upload and processing
+- Real-time BigQuery AI function results
+- Visualization of legal insights and predictions
+
 ---
 
 ## 🚀 **Competition Optimization Benefits**
@@ -131,9 +139,13 @@ pip install -r requirements.txt
 # Setup BigQuery
 python src/bigquery_client.py --setup
 
+# Run Streamlit dashboard
+streamlit run src/streamlit_app.py
+
 # Run core tests
 python -m pytest tests/test_bigquery_ai.py
 python -m pytest tests/test_vector_search.py
+python -m pytest tests/test_streamlit_app.py
 ```
 
 ### **Competition Submission**

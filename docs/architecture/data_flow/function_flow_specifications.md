@@ -147,10 +147,141 @@ SELECT
 
 ### **Function 4: AI.FORECAST - Case Outcome Prediction**
 
-**PURPOSE**: Predict case outcomes based on historical data
-**INPUT**: Historical case data and current case information
-**OUTPUT**: Predicted outcome with confidence score
+**PURPOSE**: Predict case outcomes based on historical time series data
+**INPUT**: Time series table with case outcomes over time
+**OUTPUT**: Predicted outcome with confidence intervals
 **PERFORMANCE**: < 10 seconds per prediction
+**MODEL**: Google's TimesFM model (built-in, no custom model required)
+
+**SQL IMPLEMENTATION:**
+```sql
+-- Create time series data from legal case outcomes
+WITH case_outcomes_timeseries AS (
+  SELECT
+    DATE(case_date) as case_date,
+    CASE
+      WHEN outcome = 'plaintiff_wins' THEN 1.0
+      WHEN outcome = 'defendant_wins' THEN 0.0
+      WHEN outcome = 'settlement' THEN 0.5
+      ELSE 0.5
+    END as outcome_score,
+    case_type,
+    jurisdiction,
+    legal_issue
+  FROM `legal_ai_platform.processed_data.legal_documents`
+  WHERE case_type = @case_type
+    AND jurisdiction = @jurisdiction
+    AND legal_issue = @legal_issue
+    AND case_date IS NOT NULL
+    AND case_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 YEAR)
+  ORDER BY case_date
+),
+-- Generate forecast using AI.FORECAST
+forecast_results AS (
+  SELECT *
+  FROM AI.FORECAST(
+    TABLE case_outcomes_timeseries,
+    STRUCT(
+      30 AS horizon,           -- Forecast 30 days ahead
+      0.95 AS confidence_level -- 95% confidence interval
+    )
+  )
+)
+-- Format results for legal case prediction
+SELECT
+  @document_id as document_id,
+  forecast_timestamp,
+  forecast_value as predicted_outcome_score,
+  prediction_interval_lower_bound,
+  prediction_interval_upper_bound,
+  CASE
+    WHEN forecast_value > 0.6 THEN 'plaintiff_wins'
+    WHEN forecast_value < 0.4 THEN 'defendant_wins'
+    ELSE 'settlement'
+  END as predicted_outcome,
+  CASE
+    WHEN (prediction_interval_upper_bound - prediction_interval_lower_bound) < 0.2 THEN 'high'
+    WHEN (prediction_interval_upper_bound - prediction_interval_lower_bound) < 0.4 THEN 'medium'
+    ELSE 'low'
+  END as confidence_level
+FROM forecast_results
+ORDER BY forecast_timestamp
+LIMIT 1
+```
+
+**EXAMPLE:**
+```sql
+-- Input: Contract dispute case
+-- Output: Predicted outcome with confidence
+WITH case_outcomes_timeseries AS (
+  SELECT
+    DATE('2023-01-01') as case_date, 0.7 as outcome_score
+  UNION ALL SELECT DATE('2023-01-08'), 0.8
+  UNION ALL SELECT DATE('2023-01-15'), 0.6
+  UNION ALL SELECT DATE('2023-01-22'), 0.9
+  UNION ALL SELECT DATE('2023-01-29'), 0.7
+  -- ... more historical data
+),
+forecast_results AS (
+  SELECT *
+  FROM AI.FORECAST(
+    TABLE case_outcomes_timeseries,
+    STRUCT(30 AS horizon, 0.95 AS confidence_level)
+  )
+)
+SELECT
+  'contract_dispute_001' as document_id,
+  forecast_timestamp,
+  forecast_value,
+  CASE
+    WHEN forecast_value > 0.6 THEN 'plaintiff_wins'
+    ELSE 'defendant_wins'
+  END as predicted_outcome
+FROM forecast_results
+```
+
+**RESULT:**
+```json
+{
+  "document_id": "contract_dispute_001",
+  "forecast_timestamp": "2024-02-15",
+  "predicted_outcome_score": 0.75,
+  "predicted_outcome": "plaintiff_wins",
+  "confidence_level": "high",
+  "prediction_interval": {
+    "lower_bound": 0.68,
+    "upper_bound": 0.82
+  }
+}
+```
+
+**DEMONSTRATION STRATEGY:**
+
+1. **Data Preparation Phase:**
+   - Create time series tables from legal document outcomes
+   - Convert case outcomes to numeric scores (0.0 = defendant wins, 1.0 = plaintiff wins, 0.5 = settlement)
+   - Organize data by case type, jurisdiction, and legal issue
+
+2. **Forecasting Execution:**
+   - Use AI.FORECAST with 30-day horizon for case outcome prediction
+   - Apply 95% confidence level for prediction intervals
+   - Generate forecasts for different legal case types
+
+3. **Result Interpretation:**
+   - Convert numeric forecasts back to legal outcomes
+   - Provide confidence levels based on prediction interval width
+   - Show trend analysis over time
+
+4. **Business Value Demonstration:**
+   - Predict case outcomes for new legal documents
+   - Help lawyers assess case strength and settlement likelihood
+   - Support strategic decision-making in legal proceedings
+
+**PERFORMANCE TARGETS:**
+- **Response Time**: < 10 seconds per forecast
+- **Accuracy**: > 75% for outcome prediction
+- **Data Requirements**: Minimum 30 historical data points
+- **Confidence Threshold**: 95% prediction intervals
 
 ---
 
@@ -265,7 +396,41 @@ OPTIONS(
 **SQL IMPLEMENTATION:**
 ```sql
 -- Hybrid legal intelligence pipeline
-WITH processed_documents AS (
+WITH case_outcomes_timeseries AS (
+  -- Prepare time series data for AI.FORECAST
+  SELECT
+    DATE(case_date) as case_date,
+    CASE
+      WHEN outcome = 'plaintiff_wins' THEN 1.0
+      WHEN outcome = 'defendant_wins' THEN 0.0
+      WHEN outcome = 'settlement' THEN 0.5
+      ELSE 0.5
+    END as outcome_score,
+    case_type,
+    jurisdiction
+  FROM `legal_ai_platform.processed_data.legal_documents`
+  WHERE case_date IS NOT NULL
+    AND case_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 YEAR)
+  ORDER BY case_date
+),
+forecast_predictions AS (
+  -- Generate forecasts using AI.FORECAST
+  SELECT
+    case_type,
+    jurisdiction,
+    forecast_timestamp,
+    forecast_value as predicted_outcome_score,
+    CASE
+      WHEN forecast_value > 0.6 THEN 'plaintiff_wins'
+      WHEN forecast_value < 0.4 THEN 'defendant_wins'
+      ELSE 'settlement'
+    END as predicted_outcome
+  FROM AI.FORECAST(
+    TABLE case_outcomes_timeseries,
+    STRUCT(30 AS horizon, 0.95 AS confidence_level)
+  )
+),
+processed_documents AS (
   -- Track 1: Generate summaries and extract data
   SELECT
     document_id,
@@ -275,8 +440,7 @@ WITH processed_documents AS (
     jurisdiction,
     ML.GENERATE_TEXT(MODEL `gemini-pro`, content) as summary,
     AI.GENERATE_TABLE(MODEL `gemini-pro`, content, schema) as legal_data,
-    AI.GENERATE_BOOL(MODEL `gemini-pro`, content) as is_urgent,
-    AI.FORECAST(MODEL `gemini-pro`, historical_outcomes, 1) as predicted_outcome
+    AI.GENERATE_BOOL(MODEL `gemini-pro`, content) as is_urgent
   FROM `legal_ai_platform.legal_documents`
 ),
 similarity_analysis AS (
@@ -300,10 +464,13 @@ SELECT
   p.summary,
   p.legal_data,
   p.is_urgent,
-  p.predicted_outcome,
+  f.predicted_outcome,
+  f.predicted_outcome_score,
   s.similar_doc,
   s.similarity_score
 FROM processed_documents p
+LEFT JOIN forecast_predictions f ON p.document_type = f.case_type
+  AND p.jurisdiction = f.jurisdiction
 LEFT JOIN similarity_analysis s ON p.document_id = s.query_doc
 WHERE s.similarity_score > 0.8
 ORDER BY s.similarity_score DESC
@@ -311,16 +478,90 @@ ORDER BY s.similarity_score DESC
 
 ---
 
+## 🎯 **AI.FORECAST Demonstration Strategy**
+
+### **Program Demonstration Approach**
+
+**1. Real-Time Case Outcome Prediction:**
+```sql
+-- Live demonstration: Predict outcome for incoming legal case
+WITH incoming_case AS (
+  SELECT
+    'new_contract_dispute_2024' as document_id,
+    'contract' as case_type,
+    'federal' as jurisdiction,
+    'breach_of_contract' as legal_issue,
+    CURRENT_DATE() as case_date
+),
+historical_trends AS (
+  SELECT
+    DATE(case_date) as case_date,
+    CASE
+      WHEN outcome = 'plaintiff_wins' THEN 1.0
+      WHEN outcome = 'defendant_wins' THEN 0.0
+      WHEN outcome = 'settlement' THEN 0.5
+      ELSE 0.5
+    END as outcome_score
+  FROM `legal_ai_platform.processed_data.legal_documents`
+  WHERE case_type = 'contract'
+    AND jurisdiction = 'federal'
+    AND legal_issue = 'breach_of_contract'
+    AND case_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 YEAR)
+  ORDER BY case_date
+),
+live_forecast AS (
+  SELECT *
+  FROM AI.FORECAST(
+    TABLE historical_trends,
+    STRUCT(30 AS horizon, 0.95 AS confidence_level)
+  )
+)
+SELECT
+  i.document_id,
+  i.case_type,
+  i.jurisdiction,
+  l.forecast_value as predicted_outcome_score,
+  CASE
+    WHEN l.forecast_value > 0.6 THEN 'plaintiff_wins'
+    WHEN l.forecast_value < 0.4 THEN 'defendant_wins'
+    ELSE 'settlement'
+  END as predicted_outcome,
+  l.prediction_interval_lower_bound,
+  l.prediction_interval_upper_bound,
+  'AI.FORECAST with TimesFM' as prediction_method
+FROM incoming_case i
+CROSS JOIN live_forecast l
+```
+
+**2. Comparative Analysis Dashboard:**
+- Show historical case outcomes vs. AI.FORECAST predictions
+- Display confidence intervals and accuracy metrics
+- Demonstrate trend analysis over different time periods
+
+**3. Business Impact Demonstration:**
+- **Legal Strategy**: Help lawyers assess case strength
+- **Settlement Negotiations**: Predict likelihood of favorable outcomes
+- **Resource Allocation**: Guide case prioritization based on predicted outcomes
+- **Risk Assessment**: Identify high-risk cases requiring additional attention
+
+**4. Performance Metrics:**
+- **Accuracy**: Case outcome prediction capabilities
+- **Speed**: Fast forecasting with BigQuery AI
+- **Confidence**: Statistical prediction intervals
+- **Coverage**: Support for major legal case types
+
+---
+
 ## 📊 **Dual-Track Function Performance**
 
-### **Performance Targets:**
+### **Function Coverage:**
 - **Track 1 Functions**: ML.GENERATE_TEXT, AI.GENERATE_TABLE, AI.GENERATE_BOOL, AI.FORECAST
 - **Track 2 Functions**: ML.GENERATE_EMBEDDING, VECTOR_SEARCH, VECTOR_DISTANCE, CREATE VECTOR INDEX
 
-### **Success Rate Targets:**
-- **Overall Success Rate**: > 95%
-- **Error Rate**: < 5%
-- **Data Accuracy**: > 90%
+### **Performance Targets:**
+- **Overall Success Rate Target**: High-quality BigQuery AI processing
+- **Error Rate Target**: Robust error handling and validation
+- **Data Accuracy Target**: Reliable legal document analysis
 
 ---
 
