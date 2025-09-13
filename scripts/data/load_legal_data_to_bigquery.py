@@ -143,7 +143,7 @@ class LegalDataLoader:
                     'document_id': row['document_id'],
                     'content': row['content'],
                     'document_type': row['document_type'],
-                    'metadata': None,  # Skip JSON for now
+                    'metadata': row['metadata'],  # Include metadata
                     'file_path': row['file_path'],
                     'created_at': row['created_at'],
                     'updated_at': row['updated_at']
@@ -179,12 +179,12 @@ class LegalDataLoader:
                 logger.warning(f"Skipping document with missing required fields: {document_id}")
                 return None
 
-            # Prepare row (simplified for initial load)
+            # Prepare row with full metadata
             row = {
                 'document_id': document_id,
                 'content': content,
                 'document_type': document_type,
-                'metadata': None,  # Skip JSON field for now
+                'metadata': metadata,  # Include full metadata
                 'file_path': metadata.get('source_dataset', 'HFforLegal/case-law'),
                 'created_at': pd.to_datetime(created_at),
                 'updated_at': pd.to_datetime(updated_at)
