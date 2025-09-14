@@ -856,126 +856,6 @@ else:
 ```
 ::::::
 
-:::::: {.cell .markdown}
-### **ML.GENERATE_TEXT Performance Visualization**
-
-Let's create visualizations to demonstrate the performance and impact of our document summarization:
-::::::
-
-:::::: {.cell .code}
-```python
-# Create performance visualizations
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
-def create_performance_visualizations(result):
-    """Create visualizations for ML.GENERATE_TEXT performance."""
-
-    if not result or 'summaries' not in result:
-        print("⚠️  No results available for visualization")
-        return
-
-    # Prepare data
-    df = pd.DataFrame(result['summaries'])
-
-    # Create subplots
-    fig = make_subplots(
-        rows=2, cols=2,
-        subplot_titles=('Document Type Distribution', 'Processing Status',
-                       'Summary Length Distribution', 'Performance Metrics'),
-        specs=[[{"type": "pie"}, {"type": "bar"}],
-               [{"type": "histogram"}, {"type": "indicator"}]]
-    )
-
-    # 1. Document type distribution
-    doc_types = df['document_type'].value_counts()
-    fig.add_trace(
-        go.Pie(labels=doc_types.index, values=doc_types.values, name="Document Types"),
-        row=1, col=1
-    )
-
-    # 2. Processing status
-    status_counts = df['status'].value_counts()
-    fig.add_trace(
-        go.Bar(x=status_counts.index, y=status_counts.values, name="Status"),
-        row=1, col=2
-    )
-
-    # 3. Summary length distribution
-    summary_lengths = df['summary'].str.len()
-    fig.add_trace(
-        go.Histogram(x=summary_lengths, name="Summary Length"),
-        row=2, col=1
-    )
-
-    # 4. Performance metrics
-    fig.add_trace(
-        go.Indicator(
-            mode="gauge+number+delta",
-            value=result['avg_time_per_doc'],
-            title={'text': "Avg Time per Document (seconds)"},
-            gauge={'axis': {'range': [None, 10]},
-                   'bar': {'color': "darkblue"},
-                   'steps': [{'range': [0, 2], 'color': "lightgray"},
-                            {'range': [2, 5], 'color': "gray"}],
-                   'threshold': {'line': {'color': "red", 'width': 4},
-                               'thickness': 0.75, 'value': 5}}
-        ),
-        row=2, col=2
-    )
-
-    fig.update_layout(
-        title_text="ML.GENERATE_TEXT Performance Analysis",
-        showlegend=False,
-        height=800
-    )
-
-    fig.show()
-
-    # Business impact chart
-    fig2 = go.Figure()
-
-    # Manual vs AI processing time comparison
-    manual_time = 15 * 60  # 15 minutes in seconds
-    ai_time = result['avg_time_per_doc']
-
-    fig2.add_trace(go.Bar(
-        name='Manual Processing',
-        x=['Time per Document'],
-        y=[manual_time],
-        marker_color='red'
-    ))
-
-    fig2.add_trace(go.Bar(
-        name='AI Processing (ML.GENERATE_TEXT)',
-        x=['Time per Document'],
-        y=[ai_time],
-        marker_color='green'
-    ))
-
-    fig2.update_layout(
-        title='Manual vs AI Document Processing Time',
-        yaxis_title='Time (seconds)',
-        barmode='group'
-    )
-
-    fig2.show()
-
-    print(f"📈 Performance Summary:")
-    print(f"  • AI Processing: {ai_time:.2f} seconds per document")
-    print(f"  • Manual Processing: {manual_time} seconds per document")
-    print(f"  • Speed Improvement: {manual_time/ai_time:.1f}x faster")
-    print(f"  • Time Saved: {((manual_time - ai_time)/manual_time)*100:.1f}%")
-
-# Create visualizations
-if 'result' in locals() and isinstance(result, dict) and 'summaries' in result:
-    create_performance_visualizations(result)
-else:
-    print("⚠️  No results available for visualization. Please run ml_generate_text() first.")
-    print("💡 Tip: Make sure to run the ml_generate_text() function to get results for visualization.")
-```
-::::::
 
 :::::: {.cell .markdown}
 ### **ML.GENERATE_TEXT Quality Assessment**
@@ -1040,7 +920,6 @@ def show_content_vs_summary(result):
             print(f"❌ Failed to get original content for {doc_id}: {e}")
 
     print(f"\n✅ Quality Assessment Complete")
-    print(f"💡 Judges can now evaluate AI summarization quality against original content")
 
 # Run content vs summary comparison
 if 'result' in locals() and isinstance(result, dict) and 'summaries' in result:
