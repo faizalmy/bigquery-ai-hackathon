@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 import json
+from google.cloud.exceptions import GoogleCloudError
 
 # Add src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -66,6 +67,22 @@ class BigQueryAIFunctions:
                 logger.info(f"Created model: {model_id}")
             except Exception as e:
                 logger.warning(f"Failed to create model {model_id}: {e}")
+
+            # Create text embedding model
+            embedding_model_id = f"{self.project_id}.ai_models.text_embedding_004"
+            create_embedding_model_query = f"""
+            CREATE OR REPLACE MODEL `{embedding_model_id}`
+            REMOTE WITH CONNECTION `{self.project_id}.us.vertex-ai`
+            OPTIONS (
+                ENDPOINT = 'text-embedding-004'
+            )
+            """
+
+            try:
+                self.bigquery_client.execute_query(create_embedding_model_query)
+                logger.info(f"Created embedding model: {embedding_model_id}")
+            except Exception as e:
+                logger.warning(f"Failed to create embedding model {embedding_model_id}: {e}")
 
             # Check data availability for time-series model using actual case dates from metadata
             data_check_query = f"""
@@ -126,6 +143,9 @@ class BigQueryAIFunctions:
             except Exception as e:
                 logger.error(f"Failed to create time-series model {forecast_model_id}: {e}")
                 raise
+
+            # Create embeddings table
+            self.create_embeddings_table()
 
             logger.info("✅ AI models setup completed")
 
@@ -502,17 +522,24 @@ class BigQueryAIFunctions:
             else:
                 where_clause = f"ORDER BY created_at DESC LIMIT {limit}"
 
-            # Use actual BigQuery AI function - ML.GENERATE_EMBEDDING
+            # Use actual BigQuery AI function - ML.GENERATE_EMBEDDING as TVF with pre-built model
             query = f"""
             SELECT
                 document_id,
                 document_type,
-                ML.GENERATE_EMBEDDING(
-                    MODEL `text-embedding-preview-0409`,
-                    content
-                ) as embedding
-            FROM `{self.project_id}.legal_ai_platform_raw_data.legal_documents`
-            {where_clause}
+                ml_generate_embedding_result AS embedding,
+                ml_generate_embedding_status AS status
+            FROM ML.GENERATE_EMBEDDING(
+                MODEL `{self.project_id}.ai_models.text_embedding`,
+                (
+                    SELECT
+                        document_id,
+                        document_type,
+                        content
+                    FROM `{self.project_id}.legal_ai_platform_raw_data.legal_documents`
+                    {where_clause}
+                )
+            )
             """
 
             logger.info("Executing ML.GENERATE_EMBEDDING query...")
@@ -541,6 +568,176 @@ class BigQueryAIFunctions:
 
         except Exception as e:
             logger.error(f"ML.GENERATE_EMBEDDING failed: {e}")
+            raise
+
+    def create_embeddings_table(self) -> None:
+        """Create table to store document embeddings."""
+        try:
+            # Create legal_ai_platform_vector_indexes dataset if it doesn't exist
+            vector_dataset_id = f"{self.project_id}.legal_ai_platform_vector_indexes"
+            try:
+                self.bigquery_client.client.get_dataset(vector_dataset_id)
+                logger.info(f"Dataset {vector_dataset_id} already exists")
+            except GoogleCloudError:
+                dataset = self.bigquery_client.client.create_dataset(vector_dataset_id)
+                logger.info(f"Created dataset: {vector_dataset_id}")
+
+            create_table_query = f"""
+            CREATE TABLE IF NOT EXISTS `{self.project_id}.legal_ai_platform_vector_indexes.document_embeddings` (
+                document_id STRING NOT NULL,
+                embedding ARRAY<FLOAT64> NOT NULL,
+                model_name STRING NOT NULL,
+                model_version STRING NOT NULL,
+                created_at TIMESTAMP NOT NULL
+            )
+            """
+            self.bigquery_client.execute_query(create_table_query)
+            logger.info(f"Created embeddings table: {self.project_id}.legal_ai_platform_vector_indexes.document_embeddings")
+
+            # Verify table creation
+            verify_query = f"""
+            SELECT table_name
+            FROM `{self.project_id}.legal_ai_platform_vector_indexes.INFORMATION_SCHEMA.TABLES`
+            WHERE table_name = 'document_embeddings'
+            """
+            verify_result = self.bigquery_client.execute_query(verify_query)
+            if not any(verify_result):
+                logger.error("Failed to verify creation of document_embeddings table")
+                raise ValueError("Document embeddings table was not created successfully")
+            logger.info("Verified document_embeddings table exists")
+        except GoogleCloudError as e:
+            logger.error(f"Failed to create embeddings table: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in creating embeddings table: {e}")
+            raise
+
+    def populate_embeddings(self) -> None:
+        """Generate and store embeddings for all documents."""
+        try:
+            logger.info("Populating embeddings table...")
+
+            # Check if embeddings table has data
+            check_query = f"""
+            SELECT COUNT(*) AS row_count
+            FROM `{self.project_id}.legal_ai_platform_vector_indexes.document_embeddings`
+            """
+            check_result = self.bigquery_client.execute_query(check_query)
+            row_count = list(check_result)[0].row_count
+            if row_count > 0:
+                logger.info(f"Embeddings table already contains {row_count} rows, skipping population")
+                return
+
+            # Generate embeddings and insert into table
+            insert_query = f"""
+            INSERT INTO `{self.project_id}.legal_ai_platform_vector_indexes.document_embeddings` (
+                document_id,
+                embedding,
+                model_name,
+                model_version,
+                created_at
+            )
+            SELECT
+                document_id,
+                ml_generate_embedding_result AS embedding,
+                'text-embedding-004' AS model_name,
+                '1.0' AS model_version,
+                CURRENT_TIMESTAMP() AS created_at
+            FROM ML.GENERATE_EMBEDDING(
+                MODEL `{self.project_id}.ai_models.text_embedding`,
+                (
+                    SELECT
+                        document_id,
+                        content
+                    FROM `{self.project_id}.legal_ai_platform_raw_data.legal_documents`
+                    WHERE content IS NOT NULL
+                )
+            )
+            WHERE ml_generate_embedding_status = ''
+            """
+            self.bigquery_client.execute_query(insert_query)
+            logger.info("Successfully populated embeddings table")
+        except GoogleCloudError as e:
+            logger.error(f"Failed to populate embeddings table: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in populating embeddings table: {e}")
+            raise
+
+    def vector_search(self, query_text: str, limit: int = 10) -> Dict[str, Any]:
+        """
+        Implement VECTOR_SEARCH for similarity search.
+
+        Args:
+            query_text: Text to search for similar documents
+            limit: Number of results to return (default: 10)
+
+        Returns:
+            Dict containing search results
+        """
+        try:
+            logger.info(f"Starting VECTOR_SEARCH for query: {query_text[:50]}...")
+
+            if not self.bigquery_client.connect():
+                raise Exception("Failed to connect to BigQuery")
+
+            query = """
+            SELECT
+                base.document_id,
+                distance AS similarity_distance
+            FROM VECTOR_SEARCH(
+                (
+                    SELECT
+                        document_id,
+                        embedding
+                    FROM `{project_id}.legal_ai_platform_vector_indexes.document_embeddings`
+                    WHERE embedding IS NOT NULL
+                ),
+                'embedding',
+                (
+                    SELECT
+                        ml_generate_embedding_result.embedding AS query_embedding
+                    FROM ML.GENERATE_EMBEDDING(
+                        MODEL `text-embedding-004`,
+                        (SELECT @query_text AS content)
+                    )
+                    WHERE ml_generate_embedding_status = ''
+                ),
+                top_k => @limit,
+                distance_type => 'COSINE'
+            )
+            """
+            params = {"query_text": query_text, "limit": limit}
+            query = query.format(project_id=self.project_id)
+
+            logger.info("Executing VECTOR_SEARCH query...")
+            logger.debug(f"Final BigQuery query:\n{query}")
+            result = self.bigquery_client.execute_query(query, params)
+
+            search_results = []
+            for row in result:
+                result_data = {
+                    'document_id': row.document_id,
+                    'similarity_distance': row.similarity_distance,
+                    'created_at': datetime.now().isoformat()
+                }
+                search_results.append(result_data)
+
+            logger.info(f"Generated {len(search_results)} vector search results")
+
+            return {
+                'function': 'VECTOR_SEARCH',
+                'purpose': 'Similarity Search',
+                'total_results': len(search_results),
+                'results': search_results,
+                'timestamp': datetime.now().isoformat()
+            }
+
+        except GoogleCloudError as e:
+            logger.error(f"VECTOR_SEARCH failed: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in VECTOR_SEARCH: {e}")
             raise
 
     def run_all_ai_functions(self, document_id: str = None) -> Dict[str, Any]:
