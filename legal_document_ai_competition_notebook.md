@@ -928,3 +928,304 @@ else:
     print("⚠️  No results available for content comparison. Please run ml_generate_text() first.")
 ```
 ::::::
+
+:::::: {.cell .markdown}
+### **4.2 AI.GENERATE_TABLE - Data Extraction**
+
+Let's implement the AI.GENERATE_TABLE function to extract structured legal data from documents. This demonstrates how we can automatically extract key legal entities and information in a structured format.
+::::::
+
+:::::: {.cell .code}
+```python
+def ai_generate_table(document_id=None, limit=10):
+    """
+    Implement AI.GENERATE_TABLE for structured data extraction using BigQuery AI.
+
+    Args:
+        document_id: Specific document ID to extract from (optional)
+        limit: Number of documents to process (default: 10)
+
+    Returns:
+        Dict containing extraction results
+    """
+    import time
+    import json
+    from datetime import datetime
+
+    try:
+        print(f"🚀 Starting AI.GENERATE_TABLE data extraction...")
+        start_time = time.time()
+
+        # Connect to BigQuery
+        if not client:
+            raise Exception("BigQuery client not initialized")
+
+        # Build parameterized query for structured data extraction
+        query = """
+        SELECT
+            document_id,
+            document_type,
+            ml_generate_text_llm_result AS extracted_data,
+            ml_generate_text_status AS status
+        FROM ML.GENERATE_TEXT(
+            MODEL `{project_id}.ai_models.ai_gemini_pro`,
+            (
+                SELECT
+                    document_id,
+                    document_type,
+                    CONCAT(
+                        'Extract available legal information as a JSON object. Use these fields if available: case_number, court_name, case_date, plaintiff, defendant, monetary_amount, legal_issues, outcome. If a field is not available in the document, omit it from the JSON. Start directly with the JSON without introductory phrases: ',
+                        content
+                    ) AS prompt
+                FROM `{project_id}.legal_ai_platform_raw_data.legal_documents`
+                {where_clause}
+            ),
+            STRUCT(
+                TRUE AS flatten_json_output,
+                2048 AS max_output_tokens,
+                0.1 AS temperature,
+                0.8 AS top_p,
+                40 AS top_k
+            )
+        )
+        """
+
+        # Build where clause based on parameters
+        where_clause = ""
+        if document_id:
+            where_clause = f"WHERE document_id = '{document_id}'"
+        else:
+            where_clause = f"ORDER BY created_at DESC LIMIT {limit}"
+
+        # Format query with project ID and where clause
+        query = query.format(
+            project_id=config['project']['id'],
+            where_clause=where_clause
+        )
+
+        print("📝 Executing AI.GENERATE_TABLE query...")
+        result = client.query(query)
+
+        # Process results
+        extractions = []
+        for row in result:
+            if row.status:
+                print(f"⚠️  Document {row.document_id} has status: {row.status}")
+
+            # Debug: Check what we're getting from BigQuery
+            print(f"🔍 Debug - Document {row.document_id}:")
+            print(f"  Extracted data length: {len(str(row.extracted_data)) if row.extracted_data else 0} characters")
+            print(f"  Extracted data preview: {str(row.extracted_data)[:100] if row.extracted_data else 'None'}...")
+
+            # Try to parse JSON, handle errors gracefully
+            try:
+                if row.extracted_data:
+                    # Clean up the extracted data if it's not valid JSON
+                    extracted_text = str(row.extracted_data).strip()
+                    if extracted_text.startswith('```json'):
+                        extracted_text = extracted_text.replace('```json', '').replace('```', '').strip()
+                    elif extracted_text.startswith('```'):
+                        extracted_text = extracted_text.replace('```', '').strip()
+
+                    parsed_data = json.loads(extracted_text)
+                else:
+                    parsed_data = {}
+            except json.JSONDecodeError as e:
+                print(f"⚠️  JSON parsing failed for {row.document_id}: {e}")
+                parsed_data = {"error": "Failed to parse JSON", "raw_data": str(row.extracted_data)}
+
+            extraction_data = {
+                'document_id': row.document_id,
+                'document_type': row.document_type,
+                'extracted_data': parsed_data,
+                'status': row.status or "OK",
+                'created_at': datetime.now().isoformat()
+            }
+            extractions.append(extraction_data)
+
+        end_time = time.time()
+        processing_time = end_time - start_time
+
+        print(f"✅ Generated {len(extractions)} data extractions using AI.GENERATE_TABLE")
+        print(f"⏱️  Processing time: {processing_time:.2f} seconds")
+        print(f"📊 Average time per document: {processing_time/len(extractions):.2f} seconds")
+
+        return {
+            'function': 'AI.GENERATE_TABLE',
+            'purpose': 'Structured Legal Data Extraction',
+            'total_documents': len(extractions),
+            'extractions': extractions,
+            'processing_time': processing_time,
+            'avg_time_per_doc': processing_time/len(extractions),
+            'timestamp': datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        print(f"❌ AI.GENERATE_TABLE extraction failed: {e}")
+        raise
+
+# Test the function and store results for analysis
+print("🧪 Testing AI.GENERATE_TABLE function...")
+try:
+    # Run AI.GENERATE_TABLE and store results
+    ai_generate_table_result = ai_generate_table(limit=3)
+    print(f"✅ Function test successful!")
+    print(f"📈 Processed {ai_generate_table_result['total_documents']} documents")
+    print(f"⚡ Average processing time: {ai_generate_table_result['avg_time_per_doc']:.2f}s per document")
+
+    # Store result for analysis functions
+    table_result = ai_generate_table_result
+    print(f"💾 Results stored in 'table_result' variable for analysis")
+
+except Exception as e:
+    print(f"❌ Function test failed: {e}")
+    print(f"💡 Make sure BigQuery client is connected and data is available")
+```
+::::::
+
+:::::: {.cell .markdown}
+### **AI.GENERATE_TABLE Results Analysis**
+
+Let's analyze the structured data extraction results and demonstrate the business impact:
+::::::
+
+:::::: {.cell .code}
+```python
+# Analyze AI.GENERATE_TABLE results
+def analyze_extraction_results(result):
+    """Analyze and visualize AI.GENERATE_TABLE results."""
+    import json
+
+    # Convert to DataFrame for analysis
+    df = pd.DataFrame(result['extractions'])
+
+    print("📊 AI.GENERATE_TABLE Results Analysis")
+    print("=" * 50)
+
+    # Basic statistics
+    print(f"Total Documents Processed: {len(df)}")
+    print(f"Processing Time: {result['processing_time']:.2f} seconds")
+    print(f"Average Time per Document: {result['avg_time_per_doc']:.2f} seconds")
+
+    # Document type distribution
+    print(f"\n📋 Document Type Distribution:")
+    doc_types = df['document_type'].value_counts()
+    for doc_type, count in doc_types.items():
+        print(f"  {doc_type}: {count} documents")
+
+    # Status analysis
+    print(f"\n✅ Status Analysis:")
+    status_counts = df['status'].value_counts()
+    for status, count in status_counts.items():
+        print(f"  {status}: {count} documents")
+
+    # Show sample extractions
+    print(f"\n📝 Sample Extractions:")
+    for i, row in df.head(3).iterrows():
+        print(f"\n{'='*80}")
+        print(f"Document {row['document_id']} ({row['document_type']})")
+        print(f"{'='*80}")
+        print(f"Extracted Data:")
+        # Display extracted data (only available fields will be present)
+        print(f"{json.dumps(row['extracted_data'], indent=2)}")
+        print(f"\nStatus: {row['status']}")
+        print(f"Created: {row['created_at']}")
+        print(f"{'='*80}")
+
+    # Calculate business impact
+    print(f"\n💼 Business Impact Analysis:")
+    print(f"Time Saved per Document: ~20 minutes (manual) vs {result['avg_time_per_doc']:.2f}s (AI)")
+    time_saved_per_doc = 20 * 60 - result['avg_time_per_doc']  # 20 minutes in seconds
+    total_time_saved = time_saved_per_doc * len(df)
+    print(f"Total Time Saved: {total_time_saved/60:.1f} minutes for {len(df)} documents")
+    print(f"Efficiency Improvement: {(time_saved_per_doc / (20*60)) * 100:.1f}%")
+
+    return df
+
+# Run analysis
+if 'table_result' in locals() and isinstance(table_result, dict) and 'extractions' in table_result:
+    df_extractions = analyze_extraction_results(table_result)
+else:
+    print("⚠️  No results available for analysis. Please run ai_generate_table() first.")
+    print("💡 Tip: Make sure to run the ai_generate_table() function to get results for analysis.")
+```
+::::::
+
+:::::: {.cell .markdown}
+### **AI.GENERATE_TABLE Quality Assessment**
+
+Let's show the original document content alongside the extracted structured data for quality evaluation:
+::::::
+
+:::::: {.cell .code}
+```python
+# Show original content vs extracted data for quality assessment
+def show_content_vs_extraction(result):
+    """Show original document content alongside extracted structured data."""
+    import json
+
+    if not result or 'extractions' not in result:
+        print("⚠️  No results available for content comparison")
+        return
+
+    print("🔍 Content vs Extraction Quality Assessment")
+    print("=" * 80)
+
+    # Get original content for comparison
+    for i, extraction_data in enumerate(result['extractions'][:2], 1):  # Show first 2 for detailed review
+        doc_id = extraction_data['document_id']
+
+        # Get original content
+        content_query = f"""
+        SELECT content, document_type, metadata
+        FROM `{config['project']['id']}.legal_ai_platform_raw_data.legal_documents`
+        WHERE document_id = '{doc_id}'
+        """
+
+        try:
+            content_result = client.query(content_query).result()
+            original_doc = next(content_result)
+
+            print(f"\n{'='*100}")
+            print(f"DOCUMENT {i}: {doc_id} ({extraction_data['document_type']})")
+            print(f"{'='*100}")
+
+            print(f"\n📄 ORIGINAL CONTENT (First 500 characters):")
+            print(f"{'-'*50}")
+            print(f"{original_doc.content[:500]}...")
+            print(f"\n[Total Length: {len(original_doc.content):,} characters]")
+
+            print(f"\n🤖 AI-EXTRACTED STRUCTURED DATA:")
+            print(f"{'-'*50}")
+            print(f"{json.dumps(extraction_data['extracted_data'], indent=2)}")
+
+            print(f"\n📊 EXTRACTION ANALYSIS:")
+            print(f"  • Original Length: {len(original_doc.content):,} characters")
+            print(f"  • Extracted Fields: {len(extraction_data['extracted_data'])} fields")
+            print(f"  • Processing Status: {extraction_data['status']}")
+
+            # Show extracted fields (only available fields will be present)
+            if extraction_data['extracted_data']:
+                print(f"\n📋 EXTRACTED FIELDS:")
+                for field, value in extraction_data['extracted_data'].items():
+                    if field != 'error':
+                        print(f"  • {field}: {value}")
+
+            if original_doc.metadata:
+                print(f"\n📋 METADATA:")
+                print(f"  {original_doc.metadata}")
+
+            print(f"{'='*100}")
+
+        except Exception as e:
+            print(f"❌ Failed to get original content for {doc_id}: {e}")
+
+    print(f"\n✅ Quality Assessment Complete")
+
+# Run content vs extraction comparison
+if 'table_result' in locals() and isinstance(table_result, dict) and 'extractions' in table_result:
+    show_content_vs_extraction(table_result)
+else:
+    print("⚠️  No results available for content comparison. Please run ai_generate_table() first.")
+```
+::::::
