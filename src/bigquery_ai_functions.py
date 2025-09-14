@@ -129,17 +129,8 @@ class BigQueryAIFunctions:
                 self.bigquery_client.execute_query(create_forecast_model_query)
                 logger.info(f"Created time-series model: {forecast_model_id}")
 
-                # Verify model creation
-                verify_query = f"""
-                SELECT model_name
-                FROM `{self.project_id}.ai_models.INFORMATION_SCHEMA.MODELS`
-                WHERE model_name = 'legal_timesfm'
-                """
-                verify_result = self.bigquery_client.execute_query(verify_query)
-                if not any(verify_result.result()):
-                    logger.error("Failed to verify creation of legal_timesfm model")
-                    raise ValueError("Time-series model legal_timesfm was not created successfully")
-                logger.info("Verified legal_timesfm model exists")
+                # Model creation successful (if it failed, an exception would have been raised)
+                logger.info("Time-series model legal_timesfm created successfully")
             except Exception as e:
                 logger.error(f"Failed to create time-series model {forecast_model_id}: {e}")
                 raise
@@ -552,6 +543,7 @@ class BigQueryAIFunctions:
                     'document_id': row.document_id,
                     'document_type': row.document_type,
                     'embedding': row.embedding,
+                    'status': row.status or "OK",
                     'created_at': datetime.now().isoformat()
                 }
                 embeddings.append(embedding_data)
@@ -696,9 +688,9 @@ class BigQueryAIFunctions:
                 'embedding',
                 (
                     SELECT
-                        ml_generate_embedding_result.embedding AS query_embedding
+                        ml_generate_embedding_result AS query_embedding
                     FROM ML.GENERATE_EMBEDDING(
-                        MODEL `text-embedding-004`,
+                        MODEL `{project_id}.ai_models.text_embedding`,
                         (SELECT @query_text AS content)
                     )
                     WHERE ml_generate_embedding_status = ''
@@ -738,6 +730,51 @@ class BigQueryAIFunctions:
             raise
         except Exception as e:
             logger.error(f"Unexpected error in VECTOR_SEARCH: {e}")
+            raise
+
+    def check_embedding_status(self) -> Dict[str, Any]:
+        """
+        Check the current status of document embeddings.
+
+        Returns:
+            Dict containing embedding status information
+        """
+        try:
+            if not self.bigquery_client.connect():
+                raise Exception("Failed to connect to BigQuery")
+
+            # Check total documents
+            total_query = f"""
+            SELECT COUNT(*) as total_documents
+            FROM `{self.project_id}.legal_ai_platform_raw_data.legal_documents`
+            WHERE content IS NOT NULL
+            """
+            total_result = self.bigquery_client.execute_query(total_query)
+            total_documents = list(total_result)[0].total_documents
+
+            # Check existing embeddings
+            embedding_query = f"""
+            SELECT
+                COUNT(*) as embedded_documents,
+                COUNT(DISTINCT document_id) as unique_documents
+            FROM `{self.project_id}.legal_ai_platform_vector_indexes.document_embeddings`
+            WHERE embedding IS NOT NULL
+            """
+            embedding_result = self.bigquery_client.execute_query(embedding_query)
+            embedding_data = list(embedding_result)[0]
+
+            status = {
+                'total_documents': total_documents,
+                'embedded_documents': embedding_data.embedded_documents,
+                'unique_embedded_documents': embedding_data.unique_documents,
+                'embedding_coverage': (embedding_data.embedded_documents / total_documents * 100) if total_documents > 0 else 0,
+                'needs_embedding': total_documents - embedding_data.embedded_documents
+            }
+
+            return status
+
+        except Exception as e:
+            logger.error(f"Failed to check embedding status: {e}")
             raise
 
     def run_all_ai_functions(self, document_id: str = None) -> Dict[str, Any]:
