@@ -251,34 +251,70 @@ except subprocess.CalledProcessError as e:
 - **bigframes>=2.18.0**: BigQuery DataFrames for AI functions
 - **pandas>=2.3.2, numpy>=2.3.2**: Data processing
 - **matplotlib>=3.10.6, seaborn>=0.13.2, plotly>=5.24.1**: Visualization
-- **PyYAML>=6.0.1**: Configuration management
 - **datasets>=3.2.0, huggingface-hub>=0.28.1**: Legal data access
 ::::::
 
 :::::: {.cell .markdown}
 ### **2.2 BigQuery Configuration & Authentication**
 
-Our platform uses a comprehensive configuration system to manage BigQuery connections and AI model settings.
+Our platform uses a streamlined configuration system with only the essential settings needed for BigQuery connections and AI model references.
 
-#### **Configuration Loading**
-Load configuration from our existing `config/bigquery_config.yaml`:
+#### **Configuration Setup**
+Define essential BigQuery configuration directly in the notebook for complete self-containment:
 ::::::
 
 :::::: {.cell .code}
 ```python
-import yaml
 import os
 from pathlib import Path
 
-# Load configuration
-config_path = "config/bigquery_config.yaml"
-with open(config_path, 'r') as file:
-    config = yaml.safe_load(file)
+# BigQuery Configuration - Legal Document Intelligence Platform
+# BigQuery AI Hackathon Configuration
+
+config = {
+    # Project Configuration
+    'project': {
+        'id': 'faizal-hackathon',
+        'location': 'US'
+    },
+
+    # Environment Configuration
+    'environment': {
+        'current': 'development',
+        'debug': True
+    },
+
+    # Dataset Names (used in SQL queries)
+    'datasets': {
+        'legal_ai_platform': {
+            'subdatasets': {
+                'raw_data': 'legal_ai_platform_raw_data',
+                'vector_indexes': 'legal_ai_platform_vector_indexes'
+            }
+        }
+    },
+
+    # AI Model Names (used in ML function calls)
+    'ai_models': {
+        'ai_gemini_pro': 'ai_gemini_pro',
+        'text_embedding': 'text_embedding',
+        'timesfm': 'legal_timesfm'
+    }
+}
 
 print("✅ Configuration loaded successfully")
 print(f"Project ID: {config['project']['id']}")
 print(f"Location: {config['project']['location']}")
 print(f"Environment: {config['environment']['current']}")
+print(f"Debug Mode: {config['environment']['debug']}")
+print(f"Available Datasets: {list(config['datasets']['legal_ai_platform']['subdatasets'].keys())}")
+print(f"Available AI Models: {list(config['ai_models'].keys())}")
+
+print(f"\n📋 Configuration Summary:")
+print(f"  • Streamlined config with only essential settings")
+print(f"  • Removed unused table schemas and detailed model parameters")
+print(f"  • Kept only: project ID/location, environment flags, dataset names, AI model names")
+print(f"  • Reduced from ~150 lines to ~30 lines (80% reduction)")
 ```
 ::::::
 
@@ -290,14 +326,32 @@ Set up authentication using our existing service account:
 :::::: {.cell .code}
 ```python
 # Set up authentication
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'config/service-account-key.json'
+# Option 1: Use service account key file (if available)
+# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'config/service-account-key.json'
 
-# Verify authentication
+# Option 2: Use default authentication (recommended for Kaggle/Colab)
+# This will use the default service account or user credentials
+
+# Verify authentication and initialize BigQuery client
 from google.cloud import bigquery
-client = bigquery.Client(project=config['project']['id'])
 
-print(f"✅ Authenticated with project: {client.project}")
-print(f"✅ BigQuery client initialized successfully")
+try:
+    client = bigquery.Client(project=config['project']['id'])
+    print(f"✅ Authenticated with project: {client.project}")
+    print(f"✅ BigQuery client initialized successfully")
+
+    # Test basic connectivity
+    test_query = "SELECT 1 as test_connection"
+    result = client.query(test_query).result()
+    test_value = next(result).test_connection
+    print(f"✅ Connection test successful (value: {test_value})")
+
+except Exception as e:
+    print(f"❌ Authentication failed: {e}")
+    print("💡 Please ensure you have proper Google Cloud credentials configured")
+    print("   - For Kaggle: Use 'Add-ons' → 'Google Cloud Services' → 'BigQuery'")
+    print("   - For local: Set GOOGLE_APPLICATION_CREDENTIALS environment variable")
+    print("   - For Colab: Use 'Runtime' → 'Change runtime type' → 'Hardware accelerator' → 'GPU' (optional)")
 ```
 ::::::
 

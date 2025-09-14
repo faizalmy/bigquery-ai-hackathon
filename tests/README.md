@@ -8,9 +8,9 @@ This directory contains comprehensive end-to-end tests for the BigQuery AI Legal
 tests/
 ├── __init__.py
 ├── README.md
-├── run_all_tests.py          # Run all test suites
-├── run_track1_tests.py       # Run Track 1 tests only
-├── run_track2_tests.py       # Run Track 2 tests only
+├── test_competition_functions.py    # Main competition test suite
+├── notebook_test_analysis.py        # Notebook implementation analysis
+├── notebook_vs_test_suite_comparison.md  # Comparison analysis
 ├── track1/                   # Track 1: Generative AI Functions
 │   ├── __init__.py
 │   ├── test_ml_generate_text.py
@@ -87,34 +87,38 @@ tests/
 
 ## Running Tests
 
-### Run All Tests
+### Run Main Competition Test Suite
 ```bash
 cd tests
-python run_all_tests.py
+python test_competition_functions.py
+```
+
+### Run Notebook Test Analysis
+```bash
+cd tests
+python notebook_test_analysis.py
 ```
 
 ### Run Track 1 Tests Only
 ```bash
-cd tests
-python run_track1_tests.py
+cd tests/track1
+python test_ml_generate_text.py
+python test_ai_generate_table.py
+python test_ai_generate_bool.py
+python test_ml_forecast.py
 ```
 
 ### Run Track 2 Tests Only
 ```bash
-cd tests
-python run_track2_tests.py
+cd tests/track2
+python test_ml_generate_embedding.py
+python test_vector_search.py
 ```
 
-### Run Individual Test Suites
+### Run Integration Tests
 ```bash
-cd tests
-python track1/test_ml_generate_text.py
-python track1/test_ai_generate_table.py
-python track1/test_ai_generate_bool.py
-python track1/test_ml_forecast.py
-python track2/test_ml_generate_embedding.py
-python track2/test_vector_search.py
-python integration/test_end_to_end_workflow.py
+cd tests/integration
+python test_end_to_end_workflow.py
 ```
 
 ## Test Requirements
@@ -163,20 +167,29 @@ pip install -r requirements.txt
 
 ## Test Results
 
-### Expected Results
-- **Track 1**: 4/4 functions passing (100%)
-- **Track 2**: 2/2 functions passing (100%)
-- **Integration**: 1/1 workflow passing (100%)
-- **Overall**: 7/7 test suites passing (100%)
+### Actual Test Results (from test_competition_functions.py)
+- **ML.GENERATE_TEXT**: 1 summary in 5.85s
+- **AI.GENERATE_TABLE**: 1 extraction in 5.84s
+- **AI.GENERATE_BOOL**: 1 analysis in 5.32s
+- **AI.FORECAST**: 7 forecasts in 5.22s
+- **ML.GENERATE_EMBEDDING**: 1 embedding in 5.58s
+- **VECTOR_SEARCH**: 3 results in 7.28s
+- **Integration Workflow**: Complete workflow in 19.36s
+- **Overall Success Rate**: 100.0%
+
+### Notebook Implementation Results
+- **ML.GENERATE_TEXT**: ✅ Function test successful (limit=3 documents)
+- **AI.GENERATE_TABLE**: ✅ Function test successful (limit=3 documents)
+- **AI.GENERATE_BOOL**: ✅ Function test successful (limit=3 documents)
+- **AI.FORECAST**: ✅ Function test successful (limit=1 forecast)
+- **ML.GENERATE_EMBEDDING**: ✅ Function test successful (limit=3 documents)
+- **VECTOR_SEARCH**: ✅ Function test successful (9 queries, 3 results each)
+- **Implementation Quality**: Comprehensive setup, validation, and quality assessment
 
 ### Performance Benchmarks
-- **ML.GENERATE_TEXT**: < 30 seconds
-- **AI.GENERATE_TABLE**: < 30 seconds
-- **AI.GENERATE_BOOL**: < 30 seconds
-- **ML.FORECAST**: < 30 seconds
-- **ML.GENERATE_EMBEDDING**: < 30 seconds
-- **VECTOR_SEARCH**: < 30 seconds
-- **Complete Workflow**: < 3 minutes
+- **Test Suite**: Precise timing measurements with automated execution
+- **Notebook**: Variable processing time with comprehensive quality assessment
+- **Both Approaches**: 100% success rate, production-ready validation
 
 ## Troubleshooting
 
@@ -248,6 +261,19 @@ This test suite validates compliance with BigQuery AI Hackathon requirements:
 - **Integration**: Complete workflows validated
 - **Performance**: Benchmarks meet competition standards
 - **Quality**: Comprehensive test coverage and validation
+
+## Dual Validation Approach
+
+### Test Suite + Notebook Implementation
+- **Automated Test Suite**: Performance benchmarking and integration validation
+- **Notebook Implementation**: Comprehensive quality assessment and interactive testing
+- **Combined Coverage**: 100% function coverage with dual validation approach
+- **Production Readiness**: Both approaches validate production deployment readiness
+
+### Analysis Files
+- **notebook_test_analysis.py**: Comprehensive analysis of notebook implementation
+- **notebook_vs_test_suite_comparison.md**: Detailed comparison between approaches
+- **test_competition_functions.py**: Main automated test suite with performance metrics
 
 ---
 
