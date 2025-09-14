@@ -53,12 +53,13 @@ class BigQueryAIFunctions:
                 logger.info(f"Created dataset: {dataset_id}")
 
             # Create Gemini Pro model for text generation
-            model_id = f"{self.project_id}.ai_models.gemini_pro"
+            gemini_config = self.bigquery_client.config['ai_models']['ai_gemini_pro']
+            model_id = f"{self.project_id}.ai_models.ai_gemini_pro"
             create_model_query = f"""
             CREATE OR REPLACE MODEL `{model_id}`
             REMOTE WITH CONNECTION `{self.project_id}.us.vertex-ai`
             OPTIONS (
-                ENDPOINT = 'gemini-pro'
+                ENDPOINT = '{gemini_config['model_name']}'
             )
             """
 
@@ -69,12 +70,13 @@ class BigQueryAIFunctions:
                 logger.warning(f"Failed to create model {model_id}: {e}")
 
             # Create text embedding model
-            embedding_model_id = f"{self.project_id}.ai_models.text_embedding_004"
+            embedding_config = self.bigquery_client.config['ai_models']['text_embedding']
+            embedding_model_id = f"{self.project_id}.ai_models.text_embedding"
             create_embedding_model_query = f"""
             CREATE OR REPLACE MODEL `{embedding_model_id}`
             REMOTE WITH CONNECTION `{self.project_id}.us.vertex-ai`
             OPTIONS (
-                ENDPOINT = 'text-embedding-004'
+                ENDPOINT = '{embedding_config['model_name']}'
             )
             """
 
@@ -620,6 +622,10 @@ class BigQueryAIFunctions:
                 logger.info(f"Embeddings table already contains {row_count} rows, skipping population")
                 return
 
+            # Get model configuration
+            model_name = self.bigquery_client.config['ai_models']['text_embedding']['model_name']
+            model_version = self.bigquery_client.config['defaults']['model_version']
+
             # Generate embeddings and insert into table
             insert_query = f"""
             INSERT INTO `{self.project_id}.legal_ai_platform_vector_indexes.document_embeddings` (
@@ -632,8 +638,8 @@ class BigQueryAIFunctions:
             SELECT
                 document_id,
                 ml_generate_embedding_result AS embedding,
-                'text-embedding-004' AS model_name,
-                '1.0' AS model_version,
+                '{model_name}' AS model_name,
+                '{model_version}' AS model_version,
                 CURRENT_TIMESTAMP() AS created_at
             FROM ML.GENERATE_EMBEDDING(
                 MODEL `{self.project_id}.ai_models.text_embedding`,
@@ -647,6 +653,13 @@ class BigQueryAIFunctions:
             )
             WHERE ml_generate_embedding_status = ''
             """
+
+            # Format query with model configuration
+            insert_query = insert_query.format(
+                model_name=model_name,
+                model_version=model_version
+            )
+
             self.bigquery_client.execute_query(insert_query)
             logger.info("Successfully populated embeddings table")
         except GoogleCloudError as e:

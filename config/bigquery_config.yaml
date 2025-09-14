@@ -123,42 +123,10 @@ tables:
         mode: "REQUIRED"
         description: "Result creation timestamp"
 
-  case_outcomes_timeseries:
-    dataset: "legal_ai_platform.processed_data"
-    description: "Time series data for AI.FORECAST predictions"
-    schema:
-      - name: "case_date"
-        type: "DATE"
-        mode: "REQUIRED"
-        description: "Date of case outcome"
-      - name: "case_type"
-        type: "STRING"
-        mode: "REQUIRED"
-        description: "Type of legal case"
-      - name: "jurisdiction"
-        type: "STRING"
-        mode: "REQUIRED"
-        description: "Legal jurisdiction"
-      - name: "outcome_score"
-        type: "FLOAT64"
-        mode: "REQUIRED"
-        description: "Numeric outcome score (0.0=defendant wins, 1.0=plaintiff wins, 0.5=settlement)"
-      - name: "outcome"
-        type: "STRING"
-        mode: "REQUIRED"
-        description: "Textual outcome description"
-      - name: "legal_issue"
-        type: "STRING"
-        mode: "NULLABLE"
-        description: "Primary legal issue"
-      - name: "created_at"
-        type: "TIMESTAMP"
-        mode: "REQUIRED"
-        description: "Record creation timestamp"
 
 # AI Model Configuration
 ai_models:
-  gemini_pro:
+  ai_gemini_pro:
     model_name: "gemini-pro"
     max_tokens: 2048
     temperature: 0.1
@@ -167,7 +135,7 @@ ai_models:
     description: "Gemini Pro model for text generation and analysis"
 
   text_embedding:
-    model_name: "text-embedding-preview-0409"
+    model_name: "text-embedding-005"
     dimensions: 768
     description: "Text embedding model for vector search"
 
@@ -175,98 +143,3 @@ ai_models:
     model_name: "timesfm"
     description: "Time series forecasting model for AI.FORECAST"
 
-# Vector Search Configuration
-vector_search:
-  default_distance_type: "COSINE"
-  default_top_k: 10
-  index_types:
-    - "IVF"
-    - "HNSW"
-  distance_types:
-    - "COSINE"
-    - "EUCLIDEAN"
-    - "DOT_PRODUCT"
-
-# Processing Configuration
-processing:
-  batch_size: 10
-  max_retries: 3
-  timeout_seconds: 300
-  concurrent_requests: 5
-
-  # Track 1 (Generative AI) Settings
-  track1:
-    max_tokens_per_request: 2048
-    temperature: 0.1
-    timeout_seconds: 60
-
-  # Track 2 (Vector Search) Settings
-  track2:
-    embedding_batch_size: 50
-    similarity_threshold: 0.7
-    max_results: 20
-
-# API Configuration
-api:
-  host: "localhost"
-  port: 8000
-  workers: 1
-  reload: true
-  cors_origins: ["*"]
-  rate_limit: "100/minute"
-
-# Monitoring Configuration
-monitoring:
-  enabled: true
-  metrics_interval: 60
-  log_retention_days: 7
-  alert_thresholds:
-    error_rate: 0.05
-    response_time_ms: 5000
-    success_rate: 0.95
-
-# Security Configuration
-security:
-  service_account_roles:
-    - "roles/bigquery.admin"
-    - "roles/bigquery.dataEditor"
-    - "roles/bigquery.jobUser"
-    - "roles/ml.developer"
-
-  encryption:
-    default_kms_key: null
-    customer_managed_encryption: false
-
-# Environment-specific overrides
-environments:
-  development:
-    project:
-      id: "faizal-hackathon-dev"
-    processing:
-      batch_size: 5
-      timeout_seconds: 120
-    monitoring:
-      enabled: true
-      log_level: "DEBUG"
-
-  staging:
-    project:
-      id: "faizal-hackathon-staging"
-    processing:
-      batch_size: 20
-      timeout_seconds: 300
-    monitoring:
-      enabled: true
-      log_level: "INFO"
-
-  production:
-    project:
-      id: "faizal-hackathon-prod"
-    processing:
-      batch_size: 50
-      timeout_seconds: 600
-    monitoring:
-      enabled: true
-      log_level: "WARNING"
-    security:
-      customer_managed_encryption: true
