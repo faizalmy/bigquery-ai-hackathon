@@ -1229,3 +1229,578 @@ else:
     print("⚠️  No results available for content comparison. Please run ai_generate_table() first.")
 ```
 ::::::
+
+:::::: {.cell .markdown}
+### **4.3 AI.GENERATE_BOOL - Urgency Detection**
+
+Let's implement the AI.GENERATE_BOOL function to classify document urgency using boolean output. This demonstrates how we can automatically detect time-sensitive legal matters that require immediate attention.
+::::::
+
+:::::: {.cell .code}
+```python
+def ai_generate_bool(document_id=None, limit=10):
+    """
+    Implement AI.GENERATE_BOOL for urgency detection using BigQuery AI.
+
+    Args:
+        document_id: Specific document ID to analyze (optional)
+        limit: Number of documents to process (default: 10)
+
+    Returns:
+        Dict containing urgency analysis results
+    """
+    import time
+    from datetime import datetime
+
+    try:
+        print(f"🚀 Starting AI.GENERATE_BOOL urgency detection...")
+        start_time = time.time()
+
+        # Connect to BigQuery
+        if not client:
+            raise Exception("BigQuery client not initialized")
+
+        # Build parameterized query for boolean classification
+        query = """
+        SELECT
+            document_id,
+            document_type,
+            ml_generate_text_llm_result AS is_urgent,
+            ml_generate_text_status AS status
+        FROM ML.GENERATE_TEXT(
+            MODEL `{project_id}.ai_models.ai_gemini_pro`,
+            (
+                SELECT
+                    document_id,
+                    document_type,
+                    CONCAT(
+                        'Analyze this legal document for urgency. Consider factors like deadlines, time-sensitive matters, emergency situations, or immediate action required. Respond with only "true" or "false" without any explanation. Start directly with the boolean value: ',
+                        content
+                    ) AS prompt
+                FROM `{project_id}.legal_ai_platform_raw_data.legal_documents`
+                {where_clause}
+            ),
+            STRUCT(
+                TRUE AS flatten_json_output,
+                10 AS max_output_tokens,
+                0.1 AS temperature,
+                0.8 AS top_p,
+                40 AS top_k
+            )
+        )
+        """
+
+        # Build where clause based on parameters
+        where_clause = ""
+        if document_id:
+            where_clause = f"WHERE document_id = '{document_id}'"
+        else:
+            where_clause = f"ORDER BY created_at DESC LIMIT {limit}"
+
+        # Format query with project ID and where clause
+        query = query.format(
+            project_id=config['project']['id'],
+            where_clause=where_clause
+        )
+
+        print("📝 Executing AI.GENERATE_BOOL query...")
+        result = client.query(query)
+
+        # Process results
+        urgency_analyses = []
+        for row in result:
+            if row.status:
+                print(f"⚠️  Document {row.document_id} has status: {row.status}")
+
+            # Debug: Check what we're getting from BigQuery
+            print(f"🔍 Debug - Document {row.document_id}:")
+            print(f"  Urgency result: {str(row.is_urgent) if row.is_urgent else 'None'}")
+
+            # Parse boolean result
+            urgency_text = str(row.is_urgent).strip().lower() if row.is_urgent else "false"
+            is_urgent = urgency_text in ["true", "1", "yes", "urgent"]
+
+            urgency_data = {
+                'document_id': row.document_id,
+                'document_type': row.document_type,
+                'is_urgent': is_urgent,
+                'urgency_text': urgency_text,
+                'status': row.status or "OK",
+                'created_at': datetime.now().isoformat()
+            }
+            urgency_analyses.append(urgency_data)
+
+        end_time = time.time()
+        processing_time = end_time - start_time
+
+        print(f"✅ Generated {len(urgency_analyses)} urgency analyses using AI.GENERATE_BOOL")
+        print(f"⏱️  Processing time: {processing_time:.2f} seconds")
+        print(f"📊 Average time per document: {processing_time/len(urgency_analyses):.2f} seconds")
+
+        return {
+            'function': 'AI.GENERATE_BOOL',
+            'purpose': 'Document Urgency Detection',
+            'total_documents': len(urgency_analyses),
+            'urgency_analyses': urgency_analyses,
+            'processing_time': processing_time,
+            'avg_time_per_doc': processing_time/len(urgency_analyses),
+            'timestamp': datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        print(f"❌ AI.GENERATE_BOOL urgency detection failed: {e}")
+        raise
+
+# Test the function and store results for analysis
+print("🧪 Testing AI.GENERATE_BOOL function...")
+try:
+    # Run AI.GENERATE_BOOL and store results
+    ai_generate_bool_result = ai_generate_bool(limit=3)
+    print(f"✅ Function test successful!")
+    print(f"📈 Processed {ai_generate_bool_result['total_documents']} documents")
+    print(f"⚡ Average processing time: {ai_generate_bool_result['avg_time_per_doc']:.2f}s per document")
+
+    # Store result for analysis functions
+    bool_result = ai_generate_bool_result
+    print(f"💾 Results stored in 'bool_result' variable for analysis")
+
+except Exception as e:
+    print(f"❌ Function test failed: {e}")
+    print(f"💡 Make sure BigQuery client is connected and data is available")
+```
+::::::
+
+:::::: {.cell .markdown}
+### **AI.GENERATE_BOOL Results Analysis**
+
+Let's analyze the urgency detection results and demonstrate the business impact:
+::::::
+
+:::::: {.cell .code}
+```python
+# Analyze AI.GENERATE_BOOL results
+def analyze_urgency_results(result):
+    """Analyze and visualize AI.GENERATE_BOOL results."""
+
+    # Convert to DataFrame for analysis
+    df = pd.DataFrame(result['urgency_analyses'])
+
+    print("📊 AI.GENERATE_BOOL Results Analysis")
+    print("=" * 50)
+
+    # Basic statistics
+    print(f"Total Documents Processed: {len(df)}")
+    print(f"Processing Time: {result['processing_time']:.2f} seconds")
+    print(f"Average Time per Document: {result['avg_time_per_doc']:.2f} seconds")
+
+    # Document type distribution
+    print(f"\n📋 Document Type Distribution:")
+    doc_types = df['document_type'].value_counts()
+    for doc_type, count in doc_types.items():
+        print(f"  {doc_type}: {count} documents")
+
+    # Urgency analysis
+    print(f"\n🚨 Urgency Analysis:")
+    urgency_counts = df['is_urgent'].value_counts()
+    urgent_docs = urgency_counts.get(True, 0)
+    non_urgent_docs = urgency_counts.get(False, 0)
+    total_docs = len(df)
+
+    print(f"  • Urgent Documents: {urgent_docs} ({urgent_docs/total_docs*100:.1f}%)")
+    print(f"  • Non-Urgent Documents: {non_urgent_docs} ({non_urgent_docs/total_docs*100:.1f}%)")
+
+    # Status analysis
+    print(f"\n✅ Status Analysis:")
+    status_counts = df['status'].value_counts()
+    for status, count in status_counts.items():
+        print(f"  {status}: {count} documents")
+
+    # Show sample urgency analyses
+    print(f"\n📝 Sample Urgency Analyses:")
+    for i, row in df.head(3).iterrows():
+        urgency_icon = "🚨" if row['is_urgent'] else "✅"
+        urgency_status = "URGENT" if row['is_urgent'] else "Non-Urgent"
+
+        print(f"\n{'='*80}")
+        print(f"{urgency_icon} Document {row['document_id']} ({row['document_type']})")
+        print(f"{'='*80}")
+        print(f"Urgency Status: {urgency_status}")
+        print(f"AI Response: {row['urgency_text']}")
+        print(f"Status: {row['status']}")
+        print(f"Created: {row['created_at']}")
+        print(f"{'='*80}")
+
+    # Calculate business impact
+    print(f"\n💼 Business Impact Analysis:")
+    print(f"Time Saved per Document: ~5 minutes (manual review) vs {result['avg_time_per_doc']:.2f}s (AI)")
+    time_saved_per_doc = 5 * 60 - result['avg_time_per_doc']  # 5 minutes in seconds
+    total_time_saved = time_saved_per_doc * len(df)
+    print(f"Total Time Saved: {total_time_saved/60:.1f} minutes for {len(df)} documents")
+    print(f"Efficiency Improvement: {(time_saved_per_doc / (5*60)) * 100:.1f}%")
+
+    # Urgency detection value
+    if urgent_docs > 0:
+        print(f"\n🎯 Urgency Detection Value:")
+        print(f"  • {urgent_docs} urgent documents identified for immediate attention")
+        print(f"  • Potential to prevent missed deadlines and legal issues")
+        print(f"  • Improved case prioritization and resource allocation")
+
+    return df
+
+# Run analysis
+if 'bool_result' in locals() and isinstance(bool_result, dict) and 'urgency_analyses' in bool_result:
+    df_urgency = analyze_urgency_results(bool_result)
+else:
+    print("⚠️  No results available for analysis. Please run ai_generate_bool() first.")
+    print("💡 Tip: Make sure to run the ai_generate_bool() function to get results for analysis.")
+```
+::::::
+
+:::::: {.cell .markdown}
+### **AI.GENERATE_BOOL Quality Assessment**
+
+Let's show the original document content alongside the urgency classification for quality evaluation:
+::::::
+
+:::::: {.cell .code}
+```python
+# Show original content vs urgency classification for quality assessment
+def show_content_vs_urgency(result):
+    """Show original document content alongside urgency classification."""
+
+    if not result or 'urgency_analyses' not in result:
+        print("⚠️  No results available for content comparison")
+        return
+
+    print("🔍 Content vs Urgency Classification Quality Assessment")
+    print("=" * 80)
+
+    # Get original content for comparison
+    for i, urgency_data in enumerate(result['urgency_analyses'][:2], 1):  # Show first 2 for detailed review
+        doc_id = urgency_data['document_id']
+
+        # Get original content
+        content_query = f"""
+        SELECT content, document_type, metadata
+        FROM `{config['project']['id']}.legal_ai_platform_raw_data.legal_documents`
+        WHERE document_id = '{doc_id}'
+        """
+
+        try:
+            content_result = client.query(content_query).result()
+            original_doc = next(content_result)
+
+            urgency_icon = "🚨" if urgency_data['is_urgent'] else "✅"
+            urgency_status = "URGENT" if urgency_data['is_urgent'] else "Non-Urgent"
+
+            print(f"\n{'='*100}")
+            print(f"{urgency_icon} DOCUMENT {i}: {doc_id} ({urgency_data['document_type']})")
+            print(f"{'='*100}")
+
+            print(f"\n📄 ORIGINAL CONTENT (First 500 characters):")
+            print(f"{'-'*50}")
+            print(f"{original_doc.content[:500]}...")
+            print(f"\n[Total Length: {len(original_doc.content):,} characters]")
+
+            print(f"\n🤖 AI URGENCY CLASSIFICATION:")
+            print(f"{'-'*50}")
+            print(f"Urgency Status: {urgency_status}")
+            print(f"AI Response: {urgency_data['urgency_text']}")
+            print(f"Boolean Result: {urgency_data['is_urgent']}")
+
+            print(f"\n📊 URGENCY ANALYSIS:")
+            print(f"  • Original Length: {len(original_doc.content):,} characters")
+            print(f"  • Urgency Classification: {urgency_status}")
+            print(f"  • AI Confidence: {urgency_data['urgency_text']}")
+            print(f"  • Processing Status: {urgency_data['status']}")
+
+            # Analyze content for urgency indicators
+            urgency_keywords = ['deadline', 'urgent', 'immediate', 'emergency', 'time-sensitive', 'expires', 'due date', 'asap']
+            content_lower = original_doc.content.lower()
+            found_keywords = [keyword for keyword in urgency_keywords if keyword in content_lower]
+
+            if found_keywords:
+                print(f"\n🔍 URGENCY INDICATORS FOUND:")
+                for keyword in found_keywords:
+                    print(f"  • '{keyword}' detected in content")
+            else:
+                print(f"\n🔍 NO OBVIOUS URGENCY INDICATORS FOUND")
+
+            if original_doc.metadata:
+                print(f"\n📋 METADATA:")
+                print(f"  {original_doc.metadata}")
+
+            print(f"{'='*100}")
+
+        except Exception as e:
+            print(f"❌ Failed to get original content for {doc_id}: {e}")
+
+    print(f"\n✅ Quality Assessment Complete")
+
+# Run content vs urgency comparison
+if 'bool_result' in locals() and isinstance(bool_result, dict) and 'urgency_analyses' in bool_result:
+    show_content_vs_urgency(bool_result)
+else:
+    print("⚠️  No results available for content comparison. Please run ai_generate_bool() first.")
+```
+::::::
+
+:::::: {.cell .markdown}
+### **4.4 AI.FORECAST - Case Outcome Prediction**
+
+Let's implement the AI.FORECAST function to predict case outcomes using BigQuery AI. This demonstrates how we can use historical legal data to forecast future case results and provide strategic insights.
+::::::
+
+:::::: {.cell .code}
+```python
+def ai_forecast(case_type="case_law", limit=10):
+    """
+    Implement ML.FORECAST for case outcome prediction using BigQuery AI time-series model.
+
+    Args:
+        case_type: Type of case to forecast (default: "case_law")
+        limit: Number of historical data points to use (default: 10)
+
+    Returns:
+        Dict containing forecast results
+    """
+    import time
+    from datetime import datetime
+
+    try:
+        print(f"🚀 Starting ML.FORECAST outcome prediction...")
+        start_time = time.time()
+
+        # Connect to BigQuery
+        if not client:
+            raise Exception("BigQuery client not initialized")
+
+        # Build parameterized query for time-series forecasting
+        # Note: ARIMA_PLUS models don't support the third parameter (data subquery)
+        # The model is trained on historical data during creation
+        query = """
+        SELECT
+            forecast_timestamp,
+            forecast_value,
+            standard_error,
+            confidence_level,
+            confidence_interval_lower_bound,
+            confidence_interval_upper_bound
+        FROM ML.FORECAST(
+            MODEL `{project_id}.ai_models.legal_timesfm`,
+            STRUCT(7 AS horizon, 0.95 AS confidence_level)
+        )
+        """
+
+        # Format query with project ID
+        query = query.format(project_id=config['project']['id'])
+
+        print("📝 Executing ML.FORECAST query...")
+        result = client.query(query)
+
+        # Process results
+        forecasts = []
+        for row in result:
+            forecast_data = {
+                'case_type': case_type,
+                'forecast_timestamp': row.forecast_timestamp.isoformat(),
+                'forecast_value': row.forecast_value,
+                'standard_error': row.standard_error,
+                'confidence_level': row.confidence_level,
+                'confidence_interval_lower': row.confidence_interval_lower_bound,
+                'confidence_interval_upper': row.confidence_interval_upper_bound,
+                'created_at': datetime.now().isoformat()
+            }
+            forecasts.append(forecast_data)
+
+        end_time = time.time()
+        processing_time = end_time - start_time
+
+        print(f"✅ Generated {len(forecasts)} outcome forecasts using ML.FORECAST")
+        print(f"⏱️  Processing time: {processing_time:.2f} seconds")
+
+        return {
+            'function': 'AI.FORECAST',
+            'purpose': 'Case Outcome Prediction',
+            'total_forecasts': len(forecasts),
+            'forecasts': forecasts,
+            'processing_time': processing_time,
+            'timestamp': datetime.now().isoformat()
+        }
+
+    except Exception as e:
+        print(f"❌ ML.FORECAST outcome prediction failed: {e}")
+        raise
+
+# Test the function and store results for analysis
+print("🧪 Testing ML.FORECAST function...")
+try:
+    # Run ML.FORECAST and store results
+    ai_forecast_result = ai_forecast("case_law", 1)
+    print(f"✅ Function test successful!")
+    print(f"📈 Generated {ai_forecast_result['total_forecasts']} forecasts")
+    print(f"⚡ Processing time: {ai_forecast_result['processing_time']:.2f}s")
+
+    # Store result for analysis functions
+    forecast_result = ai_forecast_result
+    print(f"💾 Results stored in 'forecast_result' variable for analysis")
+
+except Exception as e:
+    print(f"❌ Function test failed: {e}")
+    print(f"💡 Make sure BigQuery client is connected and time-series model is available")
+```
+::::::
+
+:::::: {.cell .markdown}
+### **AI.FORECAST Results Analysis**
+
+Let's analyze the case outcome prediction results and demonstrate the strategic value:
+::::::
+
+:::::: {.cell .code}
+```python
+# Analyze ML.FORECAST results
+def analyze_forecast_results(result):
+    """Analyze and visualize ML.FORECAST results."""
+
+    # Convert to DataFrame for analysis
+    df = pd.DataFrame(result['forecasts'])
+
+    print("📊 ML.FORECAST Results Analysis")
+    print("=" * 50)
+
+    # Basic statistics
+    print(f"Total Forecasts Generated: {len(df)}")
+    print(f"Processing Time: {result['processing_time']:.2f} seconds")
+
+    # Case type distribution
+    print(f"\n📋 Case Type Distribution:")
+    case_types = df['case_type'].value_counts()
+    for case_type, count in case_types.items():
+        print(f"  {case_type}: {count} forecasts")
+
+    # Forecast value analysis
+    print(f"\n📈 Forecast Value Analysis:")
+    print(f"  • Average Forecast Value: {df['forecast_value'].mean():.2f}")
+    print(f"  • Min Forecast Value: {df['forecast_value'].min():.2f}")
+    print(f"  • Max Forecast Value: {df['forecast_value'].max():.2f}")
+    print(f"  • Standard Deviation: {df['forecast_value'].std():.2f}")
+
+    # Confidence interval analysis
+    print(f"\n📊 Confidence Interval Analysis:")
+    print(f"  • Average Confidence Level: {df['confidence_level'].mean():.3f}")
+    print(f"  • Average Standard Error: {df['standard_error'].mean():.2f}")
+    print(f"  • Average Lower Bound: {df['confidence_interval_lower'].mean():.2f}")
+    print(f"  • Average Upper Bound: {df['confidence_interval_upper'].mean():.2f}")
+
+    # Show sample forecasts
+    print(f"\n📝 Sample Forecasts:")
+    for i, row in df.head(3).iterrows():
+        print(f"\n{'='*80}")
+        print(f"📅 Forecast {i+1}: {row['case_type']}")
+        print(f"{'='*80}")
+        print(f"Forecast Timestamp: {row['forecast_timestamp']}")
+        print(f"Forecast Value: {row['forecast_value']:.2f}")
+        print(f"Standard Error: {row['standard_error']:.2f}")
+        print(f"Confidence Level: {row['confidence_level']:.3f}")
+        print(f"Confidence Interval: [{row['confidence_interval_lower']:.2f}, {row['confidence_interval_upper']:.2f}]")
+        print(f"Created: {row['created_at']}")
+        print(f"{'='*80}")
+
+    # Calculate business impact
+    print(f"\n💼 Business Impact Analysis:")
+    print(f"Time Saved per Forecast: ~2 hours (manual analysis) vs {result['processing_time']:.2f}s (AI)")
+    time_saved_per_forecast = 2 * 60 * 60 - result['processing_time']  # 2 hours in seconds
+    total_time_saved = time_saved_per_forecast * len(df)
+    print(f"Total Time Saved: {total_time_saved/3600:.1f} hours for {len(df)} forecasts")
+    print(f"Efficiency Improvement: {(time_saved_per_forecast / (2*60*60)) * 100:.1f}%")
+
+    # Strategic value analysis
+    avg_confidence = df['confidence_level'].mean()
+    forecast_trend = "Increasing" if df['forecast_value'].iloc[-1] > df['forecast_value'].iloc[0] else "Decreasing"
+
+    print(f"\n🎯 Strategic Value Analysis:")
+    print(f"  • {len(df)} time-series forecasts generated")
+    print(f"  • Average confidence level: {avg_confidence:.1%}")
+    print(f"  • Forecast trend: {forecast_trend}")
+    print(f"  • Potential for case volume planning and resource allocation")
+    print(f"  • Enhanced strategic decision-making with predictive insights")
+
+    return df
+
+# Run analysis
+if 'forecast_result' in locals() and isinstance(forecast_result, dict) and 'forecasts' in forecast_result:
+    df_forecast = analyze_forecast_results(forecast_result)
+else:
+    print("⚠️  No results available for analysis. Please run ai_forecast() first.")
+    print("💡 Tip: Make sure to run the ai_forecast() function to get results for analysis.")
+```
+::::::
+
+:::::: {.cell .markdown}
+### **AI.FORECAST Quality Assessment**
+
+Let's show the original document content alongside the outcome prediction for quality evaluation:
+::::::
+
+:::::: {.cell .code}
+```python
+# Show forecast results for quality assessment
+def show_forecast_quality_assessment(result):
+    """Show ML.FORECAST results for quality assessment."""
+
+    if not result or 'forecasts' not in result:
+        print("⚠️  No results available for forecast assessment")
+        return
+
+    print("🔍 ML.FORECAST Quality Assessment")
+    print("=" * 80)
+
+    # Show forecast details
+    for i, forecast_data in enumerate(result['forecasts'][:3], 1):  # Show first 3 forecasts
+        print(f"\n{'='*100}")
+        print(f"📅 FORECAST {i}: {forecast_data['case_type']}")
+        print(f"{'='*100}")
+
+        print(f"\n📊 FORECAST DETAILS:")
+        print(f"{'-'*50}")
+        print(f"Forecast Timestamp: {forecast_data['forecast_timestamp']}")
+        print(f"Forecast Value: {forecast_data['forecast_value']:.2f}")
+        print(f"Standard Error: {forecast_data['standard_error']:.2f}")
+        print(f"Confidence Level: {forecast_data['confidence_level']:.3f}")
+        print(f"Confidence Interval: [{forecast_data['confidence_interval_lower']:.2f}, {forecast_data['confidence_interval_upper']:.2f}]")
+
+        print(f"\n📈 FORECAST ANALYSIS:")
+        print(f"  • Forecast Value: {forecast_data['forecast_value']:.2f} cases")
+        print(f"  • Confidence Level: {forecast_data['confidence_level']:.1%}")
+        print(f"  • Standard Error: {forecast_data['standard_error']:.2f}")
+        print(f"  • Interval Width: {forecast_data['confidence_interval_upper'] - forecast_data['confidence_interval_lower']:.2f}")
+        print(f"  • Created: {forecast_data['created_at']}")
+
+        # Analyze forecast quality
+        confidence_width = forecast_data['confidence_interval_upper'] - forecast_data['confidence_interval_lower']
+        relative_error = forecast_data['standard_error'] / forecast_data['forecast_value'] if forecast_data['forecast_value'] > 0 else 0
+
+        print(f"\n🔍 FORECAST QUALITY INDICATORS:")
+        print(f"  • Relative Error: {relative_error:.1%}")
+        print(f"  • Confidence Interval Width: {confidence_width:.2f}")
+        print(f"  • Model Confidence: {forecast_data['confidence_level']:.1%}")
+
+        if relative_error < 0.1:
+            print(f"  • Quality Assessment: ✅ High Precision")
+        elif relative_error < 0.2:
+            print(f"  • Quality Assessment: 🟡 Medium Precision")
+        else:
+            print(f"  • Quality Assessment: 🔴 Low Precision")
+
+        print(f"{'='*100}")
+
+    print(f"\n✅ Quality Assessment Complete")
+
+# Run forecast quality assessment
+if 'forecast_result' in locals() and isinstance(forecast_result, dict) and 'forecasts' in forecast_result:
+    show_forecast_quality_assessment(forecast_result)
+else:
+    print("⚠️  No results available for forecast assessment. Please run ai_forecast() first.")
+```
+::::::
