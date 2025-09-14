@@ -166,19 +166,40 @@ class BigQueryClient:
             logger.error(f"Failed to create tables: {e}")
             return False
 
-    def execute_query(self, query: str, **kwargs) -> bigquery.QueryJob:
+    def execute_query(self, query: str, params: dict = None, **kwargs) -> bigquery.QueryJob:
         """
-        Execute a BigQuery SQL query.
+        Execute a BigQuery SQL query with optional parameters.
 
         Args:
             query: SQL query string
+            params: Dictionary of query parameters
             **kwargs: Additional query job configuration
 
         Returns:
             bigquery.QueryJob: Query job object
         """
         try:
-            job_config = bigquery.QueryJobConfig(**kwargs)
+            # Ensure client is connected
+            if self.client is None:
+                self.connect()
+
+            # Convert params dict to BigQuery parameter list
+            query_params = []
+            if params:
+                for key, value in params.items():
+                    if isinstance(value, str):
+                        query_params.append(bigquery.ScalarQueryParameter(key, "STRING", value))
+                    elif isinstance(value, int):
+                        query_params.append(bigquery.ScalarQueryParameter(key, "INT64", value))
+                    elif isinstance(value, float):
+                        query_params.append(bigquery.ScalarQueryParameter(key, "FLOAT64", value))
+                    else:
+                        query_params.append(bigquery.ScalarQueryParameter(key, "STRING", str(value)))
+
+            job_config = bigquery.QueryJobConfig(
+                query_parameters=query_params,
+                **kwargs
+            )
             query_job = self.client.query(query, job_config=job_config)
             logger.info(f"Executed query: {query[:100]}...")
             return query_job
