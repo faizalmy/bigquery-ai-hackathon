@@ -57,7 +57,7 @@ Our solution implements a comprehensive dual-track approach leveraging both BigQ
 #### **Track 2: Vector Search (The Semantic Detective)**
 - **ML.GENERATE_EMBEDDING**: Document embeddings using BigQuery
 - **VECTOR_SEARCH**: Semantic similarity search for case law
-- **VECTOR_DISTANCE**: Cosine similarity calculations
+- **ML.DISTANCE**: Cosine similarity calculations
 - **CREATE VECTOR INDEX**: Performance optimization for large datasets
 - **BigQuery Native Embeddings**: Optimized for legal document processing
 
@@ -84,7 +84,7 @@ similarity_analysis AS (
   SELECT
     doc1.document_id as query_doc,
     doc2.document_id as similar_doc,
-    VECTOR_DISTANCE(
+    ML.DISTANCE(
       doc1.embedding,
       doc2.embedding,
       'COSINE'

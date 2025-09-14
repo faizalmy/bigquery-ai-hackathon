@@ -60,7 +60,7 @@ AI.FORECAST()                -- Case outcome prediction and trends
 ```sql
 ML.GENERATE_EMBEDDING()      -- Document embeddings (BigQuery)
 VECTOR_SEARCH()              -- Similarity search
-VECTOR_DISTANCE()            -- Distance calculation
+ML.DISTANCE()                -- Distance calculation
 CREATE VECTOR INDEX          -- Performance optimization
 ```
 
@@ -104,11 +104,16 @@ similarity_analysis AS (
   SELECT
     doc1.document_id as query_doc,
     doc2.document_id as similar_doc,
-    VECTOR_DISTANCE(
+    ML.DISTANCE(
       doc1.embedding,
       doc2.embedding,
       'COSINE'
-    ) as similarity_score
+    ) as distance_score,
+    (1 - ML.DISTANCE(
+      doc1.embedding,
+      doc2.embedding,
+      'COSINE'
+    )) as similarity_score
   FROM `legal_ai_platform.legal_documents_with_embeddings` doc1
   CROSS JOIN `legal_ai_platform.legal_documents_with_embeddings` doc2
   WHERE doc1.document_id != doc2.document_id

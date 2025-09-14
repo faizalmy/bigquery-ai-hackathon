@@ -12,30 +12,30 @@
 ### **Track 1: Generative AI + Track 2: Vector Search Integration**
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Dual-Track BigQuery AI Integration Layer     │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────┐    ┌─────────────────────┐    ┌─────────────┐ │
-│  │   Input     │    │   Track 1: Gen AI   │    │   Track 1   │ │
-│  │  Documents  │───▶│   ML.GENERATE_TEXT  │───▶│  Results    │ │
-│  └─────────────┘    │   AI.GENERATE_TABLE │    └─────────────┘ │
-│                     │   AI.GENERATE_BOOL  │                    │
-│                     │   AI.FORECAST       │                    │
-│                     └─────────────────────┘                    │
-│                                                                 │
-│  ┌─────────────┐    ┌─────────────────────┐    ┌─────────────┐ │
-│  │   Input     │    │   Track 2: Vector   │    │   Track 2   │ │
-│  │  Documents  │───▶│   BigQuery AI       │───▶│  Results    │ │
-│  └─────────────┘    │   VECTOR_SEARCH     │    └─────────────┘ │
-│                     │   VECTOR_DISTANCE   │                    │
-│                     │   CREATE VECTOR IDX │                    │
-│                     └─────────────────────┘                    │
-│                                                                 │
+┌──────────────────────────────────────────────────────────────────┐
+│                    Dual-Track BigQuery AI Integration Layer      │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────┐    ┌─────────────────────┐    ┌─────────────┐   │
+│  │   Input     │    │   Track 1: Gen AI   │    │   Track 1   │   │
+│  │  Documents  │───▶│   ML.GENERATE_TEXT  │───▶│  Results    │   │
+│  └─────────────┘    │   AI.GENERATE_TABLE │    └─────────────┘   │
+│                     │   AI.GENERATE_BOOL  │                      │
+│                     │   AI.FORECAST       │                      │
+│                     └─────────────────────┘                      │
+│                                                                  │
+│  ┌─────────────┐    ┌─────────────────────┐    ┌─────────────┐   │
+│  │   Input     │    │   Track 2: Vector   │    │   Track 2   │   │
+│  │  Documents  │───▶│   BigQuery AI       │───▶│  Results    │   │
+│  └─────────────┘    │   VECTOR_SEARCH     │    └─────────────┘   │
+│                     │   ML.DISTANCE       │                      │
+│                     │   CREATE VECTOR IDX │                      │
+│                     └─────────────────────┘                      │
+│                                                                  │
 │  ┌─────────────────────────────────────────────────────────────┐ │
 │  │              Hybrid Pipeline: Combined Intelligence         │ │
 │  └─────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -437,29 +437,39 @@ FROM `legal_ai_platform.legal_documents_with_embeddings`
 WHERE document_id = @query_document_id
 ```
 
-### **Function 7: VECTOR_DISTANCE - Distance Calculation**
+### **Function 7: ML.DISTANCE - Distance Calculation**
 
-**PURPOSE**: Calculate distance between document embeddings
+**PURPOSE**: Calculate distance between document embeddings using BigQuery ML.DISTANCE
 **INPUT**: Two document embeddings
 **OUTPUT**: Cosine similarity distance
 **PERFORMANCE**: < 500ms per comparison
 
 **SQL IMPLEMENTATION:**
 ```sql
--- Calculate similarity between documents
+-- Calculate similarity between documents using ML.DISTANCE
 SELECT
   target_doc.document_id,
-  VECTOR_DISTANCE(
+  ML.DISTANCE(
     target_doc.embedding,
     source_doc.embedding,
     'COSINE'
-  ) as similarity_score
+  ) as distance_score,
+  (1 - ML.DISTANCE(
+    target_doc.embedding,
+    source_doc.embedding,
+    'COSINE'
+  )) as similarity_score
 FROM `legal_ai_platform.legal_documents_with_embeddings` target_doc
 CROSS JOIN `legal_ai_platform.legal_documents_with_embeddings` source_doc
 WHERE source_doc.document_id = @query_document_id
 ORDER BY similarity_score DESC
 LIMIT 10
 ```
+
+**IMPLEMENTATION FUNCTIONS:**
+- `ml_distance_query_document_similarity()` - Compare query embeddings with document embeddings
+- `ml_distance_document_clustering()` - Cluster documents by similarity
+- `vector_distance_analysis()` - Pairwise document comparison
 
 ### **Function 8: CREATE VECTOR INDEX - Performance Optimization**
 
@@ -524,11 +534,16 @@ similarity_analysis AS (
   SELECT
     doc1.document_id as query_doc,
     doc2.document_id as similar_doc,
-    VECTOR_DISTANCE(
+    ML.DISTANCE(
       doc1.embedding,
       doc2.embedding,
       'COSINE'
-    ) as similarity_score
+    ) as distance_score,
+    (1 - ML.DISTANCE(
+      doc1.embedding,
+      doc2.embedding,
+      'COSINE'
+    )) as similarity_score
   FROM `legal_ai_platform.legal_documents_with_embeddings` doc1
   CROSS JOIN `legal_ai_platform.legal_documents_with_embeddings` doc2
   WHERE doc1.document_id != doc2.document_id

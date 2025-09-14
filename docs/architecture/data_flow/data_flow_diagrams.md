@@ -218,7 +218,7 @@ PSEUDO CODE:
    -- Track 2: Vector Search Functions
    - call ML.GENERATE_EMBEDDING for document embeddings
    - call VECTOR_SEARCH for similarity matching
-   - call VECTOR_DISTANCE for case law comparison
+   - call ML.DISTANCE for case law comparison
    - call CREATE VECTOR INDEX for embedding storage
    - return ai_results
 

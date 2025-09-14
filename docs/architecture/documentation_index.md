@@ -58,7 +58,7 @@
 
 #### **🤖 BigQuery AI Documentation**
 - **Track 1 Functions**: ML.GENERATE_TEXT, AI.GENERATE_TABLE, AI.GENERATE_BOOL, AI.FORECAST
-- **Track 2 Functions**: ML.GENERATE_EMBEDDING, VECTOR_SEARCH, VECTOR_DISTANCE, CREATE VECTOR INDEX
+- **Track 2 Functions**: ML.GENERATE_EMBEDDING, VECTOR_SEARCH, ML.DISTANCE, CREATE VECTOR INDEX
 - **BigQuery Native Embeddings**: Optimized embedding generation for legal documents
 - **AI Integration**: BigQuery AI integration flows
 - **AI Performance**: AI function performance specifications

@@ -50,28 +50,28 @@ Our **Legal Document Intelligence Platform** leverages BigQuery AI to transform 
 
 #### **Platform Architecture**
 ```
-┌─────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────┐
 │                    Legal Document Intelligence Platform          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────┐    ┌─────────────────────┐    ┌─────────────┐ │
-│  │   Legal     │    │   Track 1: Gen AI   │    │  Automated  │ │
-│  │ Documents   │───▶│   ML.GENERATE_TEXT  │───▶│ Summaries  │ │
-│  │ (Input)     │    │   AI.GENERATE_TABLE │    │ & Insights │ │
-│  └─────────────┘    │   AI.GENERATE_BOOL  │    └─────────────┘ │
-│                     │   AI.FORECAST       │                    │
-│  ┌─────────────┐    ┌─────────────────────┐    ┌─────────────┐ │
-│  │   Legal     │    │   Track 2: Vector   │    │  Semantic   │ │
-│  │ Documents   │───▶│   ML.GENERATE_EMBED │───▶│ Search &   │ │
-│  │ (Input)     │    │   VECTOR_SEARCH     │    │ Matching   │ │
-│  └─────────────┘    │   VECTOR_DISTANCE   │    └─────────────┘ │
-│                     └─────────────────────┘                    │
-│                                                                 │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────┐    ┌─────────────────────┐    ┌─────────────┐   │
+│  │   Legal     │    │   Track 1: Gen AI   │    │  Automated  │   │
+│  │ Documents   │───▶│   ML.GENERATE_TEXT  │───▶│ Summaries   │   │
+│  │ (Input)     │    │   AI.GENERATE_TABLE │    │ & Insights  │   │
+│  └─────────────┘    │   AI.GENERATE_BOOL  │    └─────────────┘   │
+│                     │   AI.FORECAST       │                      │
+│  ┌─────────────┐    ┌─────────────────────┐    ┌─────────────┐   │
+│  │   Legal     │    │   Track 2: Vector   │    │  Semantic   │   │
+│  │ Documents   │───▶│   ML.GENERATE_EMBED │───▶│ Search &    │   │
+│  │ (Input)     │    │   VECTOR_SEARCH     │    │ Matching    │   │
+│  └─────────────┘    │   ML.DISTANCE   		│    └─────────────┘   │
+│                     └─────────────────────┘                      │
+│                                                                  │
 │  ┌─────────────────────────────────────────────────────────────┐ │
 │  │              Hybrid Intelligence Pipeline                   │ │
 │  │         Combining Generative AI + Vector Search             │ │
 │  └─────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 #### **Key Innovation: Hybrid Pipeline**
@@ -97,7 +97,7 @@ Our platform leverages the full power of BigQuery AI through these core function
 **Track 2 - Vector Search Functions:**
 - `ML.GENERATE_EMBEDDING`: Document embedding generation for semantic search
 - `VECTOR_SEARCH`: Similarity search and document matching
-- `VECTOR_DISTANCE`: Precise similarity calculations
+- `ML.DISTANCE`: Precise similarity calculations
 - `CREATE VECTOR INDEX`: Performance optimization for large document collections
 
 #### **Expected Business Impact**
@@ -553,12 +553,11 @@ def data_readiness_summary():
     print("\n🚀 Data Readiness Summary")
     print("=" * 50)
 
-    if dataset_overview and quality_results and sample_documents:
+    if dataset_overview and quality_results:
         print("✅ Data Status: READY FOR AI PROCESSING")
         print(f"\n📊 Key Metrics:")
         print(f"  • Total Documents Available: {dataset_overview.total_documents:,}")
         print(f"  • Data Completeness: {quality_results['completeness'].non_null_content/quality_results['completeness'].total_rows*100:.1f}%")
-        print(f"  • Sample Documents Prepared: {len(sample_documents)}")
         print(f"  • Average Document Length: {dataset_overview.avg_content_length:.0f} characters")
 
         print(f"\n🎯 Ready for BigQuery AI Functions:")
@@ -2113,219 +2112,367 @@ Let's analyze the similarity search results and demonstrate the semantic search 
 
 :::::: {.cell .code}
 ```python
-# Enhanced VECTOR_SEARCH results analysis
-def analyze_search_results(result):
-    """Comprehensive analysis and visualization of VECTOR_SEARCH results."""
+# Simplified VECTOR_SEARCH and ML.DISTANCE Analysis
+def analyze_vector_search_results(result):
+    """Simplified analysis of VECTOR_SEARCH results."""
 
     if 'error' in result or 'message' in result:
         print("⚠️  VECTOR_SEARCH not available or embeddings not ready")
         print(f"Status: {result.get('error', result.get('message', 'Unknown'))}")
         return None
 
-    # Convert to DataFrame for analysis
     df = pd.DataFrame(result['results'])
 
     print("📊 VECTOR_SEARCH Results Analysis")
-    print("=" * 60)
+    print("=" * 50)
 
-    # Enhanced basic statistics
-    print(f"🔍 Query Analysis:")
-    print(f"  • Search Query: '{result['query_text']}'")
-    print(f"  • Query Length: {len(result['query_text'])} characters")
-    print(f"  • Query Complexity: {'High' if len(result['query_text'].split()) > 3 else 'Medium' if len(result['query_text'].split()) > 1 else 'Low'}")
+    # Basic metrics
+    print(f"Query: '{result['query_text']}'")
+    print(f"Results Found: {len(df)}")
+    print(f"Processing Time: {result['processing_time']:.2f}s")
+    print(f"Average Similarity: {df['similarity_score'].mean():.3f}")
+    print(f"Best Match: {df['similarity_score'].max():.3f}")
 
-    print(f"\n📈 Performance Metrics:")
-    print(f"  • Total Results Found: {len(df)}")
-    print(f"  • Processing Time: {result['processing_time']:.3f} seconds")
-    print(f"  • Results per Second: {len(df)/result['processing_time']:.1f}")
-    print(f"  • Average Time per Result: {result['processing_time']/len(df):.3f}s")
+    # Show top 3 results
+    print(f"\n📝 Top Results:")
+    for i, row in df.head(3).iterrows():
+        similarity_level = "High" if row['similarity_score'] > 0.7 else "Medium" if row['similarity_score'] > 0.5 else "Low"
+        print(f"  {i+1}. {row['document_id']} - {row['similarity_score']:.3f} ({similarity_level})")
 
-    # Enhanced similarity analysis with statistical insights
-    print(f"\n📊 Similarity Statistics:")
-    print(f"  • Average Similarity Score: {df['similarity_score'].mean():.4f}")
-    print(f"  • Median Similarity Score: {df['similarity_score'].median():.4f}")
-    print(f"  • Highest Similarity Score: {df['similarity_score'].max():.4f}")
-    print(f"  • Lowest Similarity Score: {df['similarity_score'].min():.4f}")
-    print(f"  • Standard Deviation: {df['similarity_score'].std():.4f}")
-    print(f"  • Similarity Range: {df['similarity_score'].max() - df['similarity_score'].min():.4f}")
-
-    # Similarity distribution analysis
-    print(f"\n📊 Similarity Distribution:")
-    high_sim = len(df[df['similarity_score'] > 0.8])
-    med_high_sim = len(df[(df['similarity_score'] > 0.65) & (df['similarity_score'] <= 0.8)])
-    med_sim = len(df[(df['similarity_score'] > 0.5) & (df['similarity_score'] <= 0.65)])
-    low_sim = len(df[df['similarity_score'] <= 0.5])
-
-    print(f"  • High Similarity (>0.8): {high_sim} documents ({high_sim/len(df)*100:.1f}%)")
-    print(f"  • Medium-High (0.65-0.8): {med_high_sim} documents ({med_high_sim/len(df)*100:.1f}%)")
-    print(f"  • Medium (0.5-0.65): {med_sim} documents ({med_sim/len(df)*100:.1f}%)")
-    print(f"  • Low Similarity (≤0.5): {low_sim} documents ({low_sim/len(df)*100:.1f}%)")
-
-    # Enhanced search results with confidence levels
-    print(f"\n📝 Detailed Search Results:")
-    for i, row in df.iterrows():
-        # Enhanced similarity classification
-        if row['similarity_score'] > 0.9:
-            similarity_level = "Excellent Match"
-            similarity_icon = "🟢"
-            confidence = "Very High"
-        elif row['similarity_score'] > 0.8:
-            similarity_level = "High Similarity"
-            similarity_icon = "🟢"
-            confidence = "High"
-        elif row['similarity_score'] > 0.65:
-            similarity_level = "Good Match"
-            similarity_icon = "🟡"
-            confidence = "Medium-High"
-        elif row['similarity_score'] > 0.5:
-            similarity_level = "Moderate Match"
-            similarity_icon = "🟡"
-            confidence = "Medium"
-        else:
-            similarity_level = "Low Similarity"
-            similarity_icon = "🔴"
-            confidence = "Low"
-
-        print(f"\n{'='*90}")
-        print(f"{similarity_icon} Result {i+1}: {row['document_id']}")
-        print(f"{'='*90}")
-        print(f"📊 Similarity Metrics:")
-        print(f"  • Similarity Score: {row['similarity_score']:.4f} ({similarity_level})")
-        print(f"  • Distance Value: {row['similarity_distance']:.4f}")
-        print(f"  • Confidence Level: {confidence}")
-        print(f"  • Percentile Rank: {((len(df) - i) / len(df)) * 100:.1f}%")
-        print(f"⏰ Processing Info:")
-        print(f"  • Result Generated: {row['created_at']}")
-        print(f"  • Processing Order: #{i+1} of {len(df)}")
-        print(f"{'='*90}")
-
-    # Enhanced business impact analysis
-    print(f"\n💼 Comprehensive Business Impact Analysis:")
-
-    # Time savings calculation
-    manual_research_time = 30 * 60  # 30 minutes in seconds
-    ai_processing_time = result['processing_time']
-    time_saved_per_search = manual_research_time - ai_processing_time
-
-    print(f"⏱️  Time Efficiency:")
-    print(f"  • Manual Research Time: {manual_research_time/60:.1f} minutes")
-    print(f"  • AI Processing Time: {ai_processing_time:.3f} seconds")
-    print(f"  • Time Saved per Search: {time_saved_per_search/60:.1f} minutes")
-    print(f"  • Efficiency Improvement: {(time_saved_per_search / manual_research_time) * 100:.1f}%")
-    print(f"  • Speed Multiplier: {manual_research_time / ai_processing_time:.0f}x faster")
-
-    # Cost analysis
-    hourly_rate = 150  # Average legal professional hourly rate
-    cost_per_search_manual = (manual_research_time / 3600) * hourly_rate
-    cost_per_search_ai = (ai_processing_time / 3600) * hourly_rate
-    cost_savings = cost_per_search_manual - cost_per_search_ai
-
-    print(f"\n💰 Cost Analysis:")
-    print(f"  • Manual Research Cost: ${cost_per_search_manual:.2f}")
-    print(f"  • AI Processing Cost: ${cost_per_search_ai:.4f}")
-    print(f"  • Cost Savings per Search: ${cost_savings:.2f}")
-    print(f"  • ROI: {(cost_savings / cost_per_search_ai) * 100:.0f}%")
-
-    # Quality metrics
-    print(f"\n🎯 Quality Metrics:")
-    print(f"  • Search Precision: {high_sim/len(df)*100:.1f}% (high similarity results)")
-    print(f"  • Search Recall: {len(df)} relevant documents found")
-    print(f"  • Result Diversity: {df['similarity_score'].std():.3f} (higher = more diverse)")
-    print(f"  • Search Confidence: {df['similarity_score'].mean():.3f} average similarity")
-
-    # Enhanced semantic search value
-    print(f"\n🧠 Semantic Search Intelligence:")
-    print(f"  • Context Understanding: {'Excellent' if df['similarity_score'].mean() > 0.7 else 'Good' if df['similarity_score'].mean() > 0.5 else 'Basic'}")
-    print(f"  • Legal Concept Recognition: {high_sim + med_high_sim} relevant documents identified")
-    print(f"  • Precedent Discovery: {high_sim} highly relevant precedents found")
-    print(f"  • Research Efficiency: {len(df)} documents analyzed in {result['processing_time']:.3f}s")
-    print(f"  • Knowledge Extraction: Semantic understanding of legal terminology")
-
-    # Competitive advantages
-    print(f"\n🏆 Competitive Advantages:")
-    print(f"  • Real-time Legal Research: Instant document discovery")
-    print(f"  • Scalable Analysis: Handles large document collections")
-    print(f"  • Context-Aware Search: Understands legal concepts and relationships")
-    print(f"  • Cost-Effective Solution: {cost_savings:.2f} savings per search")
-    print(f"  • Professional-Grade Accuracy: {df['similarity_score'].mean():.1%} average relevance")
+    # Business impact
+    manual_time = 30 * 60  # 30 minutes
+    ai_time = result['processing_time']
+    time_saved = (manual_time - ai_time) / 60
+    print(f"\n💼 Business Impact:")
+    print(f"Time Saved: {time_saved:.1f} minutes per search")
+    print(f"Efficiency: {manual_time/ai_time:.0f}x faster than manual research")
 
     return df
 
-# Run analysis on the best result
-if 'search_result' in locals() and isinstance(search_result, dict) and 'results' in search_result:
-    df_search = analyze_search_results(search_result)
+def vector_distance_analysis(doc1_id, doc2_id):
+    """Analyze ML.DISTANCE between two documents."""
 
-    # Enhanced comparison of all test queries
-    print("\n📊 Comprehensive Query Performance Analysis:")
-    print("=" * 80)
+    print(f"🔍 ML.DISTANCE Analysis: {doc1_id} vs {doc2_id}")
+    print("=" * 60)
 
-    # Calculate comprehensive statistics for all queries
-    query_stats = []
-    for query, result in search_results.items():
-        if 'results' in result and result['results']:
-            scores = [r['similarity_score'] for r in result['results']]
-            avg_sim = sum(scores) / len(scores)
-            max_sim = max(scores)
-            min_sim = min(scores)
-            std_sim = (sum((x - avg_sim) ** 2 for x in scores) / len(scores)) ** 0.5
-            processing_time = result.get('processing_time', 0)
+    try:
+        # Calculate ML.DISTANCE using BigQuery with cosine similarity
+        distance_query = f"""
+        SELECT
+            ML.DISTANCE(
+                (SELECT embedding FROM `{config['project']['id']}.legal_ai_platform_vector_indexes.document_embeddings` WHERE document_id = '{doc1_id}'),
+                (SELECT embedding FROM `{config['project']['id']}.legal_ai_platform_vector_indexes.document_embeddings` WHERE document_id = '{doc2_id}'),
+                'COSINE'
+            ) AS cosine_distance,
+            -- Calculate similarity score (1 - distance for cosine)
+            (1 - ML.DISTANCE(
+                (SELECT embedding FROM `{config['project']['id']}.legal_ai_platform_vector_indexes.document_embeddings` WHERE document_id = '{doc1_id}'),
+                (SELECT embedding FROM `{config['project']['id']}.legal_ai_platform_vector_indexes.document_embeddings` WHERE document_id = '{doc2_id}'),
+                'COSINE'
+            )) AS cosine_similarity
+        """
 
-            query_stats.append({
-                'query': query,
-                'avg_sim': avg_sim,
-                'max_sim': max_sim,
-                'min_sim': min_sim,
-                'std_sim': std_sim,
-                'processing_time': processing_time,
-                'result_count': len(scores)
+        distance_result = client.query(distance_query)
+        distance_row = next(distance_result.result())
+        cosine_distance = distance_row.cosine_distance
+        similarity = distance_row.cosine_similarity  # Use direct similarity from BigQuery
+
+        print(f"📊 Distance Metrics:")
+        print(f"  • Cosine Distance: {cosine_distance:.4f}")
+        print(f"  • Cosine Similarity: {similarity:.4f}")
+
+        # Interpretation
+        if similarity > 0.8:
+            interpretation = "Very Similar - High semantic overlap"
+            icon = "🟢"
+        elif similarity > 0.6:
+            interpretation = "Similar - Moderate semantic overlap"
+            icon = "🟡"
+        elif similarity > 0.4:
+            interpretation = "Somewhat Similar - Low semantic overlap"
+            icon = "🟡"
+        else:
+            interpretation = "Different - Minimal semantic overlap"
+            icon = "🔴"
+
+        print(f"  • Interpretation: {icon} {interpretation}")
+
+        # Use case analysis
+        print(f"\n💼 Use Cases:")
+        if similarity > 0.7:
+            print(f"  • Document Clustering: Good candidates for grouping")
+            print(f"  • Precedent Matching: Strong legal precedent relationship")
+            print(f"  • Content Recommendation: Highly relevant for cross-referencing")
+        elif similarity > 0.5:
+            print(f"  • Related Documents: Moderate relevance for research")
+            print(f"  • Topic Clustering: Suitable for broader topic grouping")
+        else:
+            print(f"  • Diverse Content: Documents cover different legal areas")
+            print(f"  • Portfolio Analysis: Shows breadth of legal domains")
+
+        return {
+            'doc1_id': doc1_id,
+            'doc2_id': doc2_id,
+            'cosine_distance': cosine_distance,
+            'cosine_similarity': similarity,
+            'interpretation': interpretation
+        }
+
+    except Exception as e:
+        print(f"❌ ML.DISTANCE analysis failed: {e}")
+        return None
+
+def ml_distance_query_document_similarity(query_text, document_ids):
+    """
+    Use ML.DISTANCE to compare search query embeddings with found document embeddings.
+
+    Args:
+        query_text: Original search query text
+        document_ids: List of document IDs found by VECTOR_SEARCH
+
+    Returns:
+        Dictionary with query-document similarity results
+    """
+    print(f"🔍 ML.DISTANCE Query-Document Similarity Analysis")
+    print(f"Query: '{query_text}'")
+    print(f"Found Documents: {len(document_ids)}")
+    print("=" * 70)
+
+    try:
+        # Build query to compare query embedding with document embeddings
+        doc_list = "', '".join(document_ids)
+        query = f"""
+        WITH query_embedding AS (
+          SELECT
+            ml_generate_embedding_result AS query_emb
+          FROM ML.GENERATE_EMBEDDING(
+            MODEL `{config['project']['id']}.ai_models.text_embedding`,
+            (SELECT '{query_text}' AS content)
+          )
+        )
+        SELECT
+          doc.document_id,
+          ML.DISTANCE(
+            doc.embedding,
+            query_emb,
+            'COSINE'
+          ) AS cosine_distance,
+          (1 - ML.DISTANCE(
+            doc.embedding,
+            query_emb,
+            'COSINE'
+          )) AS cosine_similarity
+        FROM `{config['project']['id']}.legal_ai_platform_vector_indexes.document_embeddings` doc
+        CROSS JOIN query_embedding
+        WHERE doc.document_id IN ('{doc_list}')
+        ORDER BY cosine_similarity DESC
+        """
+
+        result = client.query(query)
+        similarities = []
+
+        print(f"📊 Query-Document Similarity Rankings:")
+        print(f"{'Rank':<4} {'Document ID':<15} {'Similarity':<12} {'Distance':<12} {'Match Quality'}")
+        print("-" * 80)
+
+        for i, row in enumerate(result, 1):
+            similarity = row.cosine_similarity
+            distance = row.cosine_distance
+
+            # Categorize match quality
+            if similarity > 0.8:
+                match_quality = "🟢 Excellent Match"
+            elif similarity > 0.7:
+                match_quality = "🟢 Good Match"
+            elif similarity > 0.6:
+                match_quality = "🟡 Fair Match"
+            elif similarity > 0.5:
+                match_quality = "🟠 Poor Match"
+            else:
+                match_quality = "🔴 No Match"
+
+            similarities.append({
+                'document_id': row.document_id,
+                'cosine_distance': distance,
+                'cosine_similarity': similarity,
+                'match_quality': match_quality,
+                'rank': i
             })
 
-    # Sort by average similarity for ranking
-    query_stats.sort(key=lambda x: x['avg_sim'], reverse=True)
+            print(f"{i:<4} {row.document_id:<15} {similarity:<12.4f} {distance:<12.4f} {match_quality}")
 
-    print(f"🏆 Query Performance Ranking (by Average Similarity):")
-    for i, stats in enumerate(query_stats, 1):
-        rank_icon = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
-        print(f"  {rank_icon} '{stats['query']}':")
-        print(f"     • Average Similarity: {stats['avg_sim']:.4f}")
-        print(f"     • Max Similarity: {stats['max_sim']:.4f}")
-        print(f"     • Min Similarity: {stats['min_sim']:.4f}")
-        print(f"     • Consistency (Std Dev): {stats['std_sim']:.4f}")
-        print(f"     • Processing Time: {stats['processing_time']:.3f}s")
-        print(f"     • Results Found: {stats['result_count']}")
-        print()
+        # Analysis of search quality
+        if similarities:
+            avg_similarity = sum(s['cosine_similarity'] for s in similarities) / len(similarities)
+            max_similarity = max(s['cosine_similarity'] for s in similarities)
+            min_similarity = min(s['cosine_similarity'] for s in similarities)
 
-    # Performance insights
-    best_query = query_stats[0]
-    worst_query = query_stats[-1]
-    avg_processing_time = sum(s['processing_time'] for s in query_stats) / len(query_stats)
+            excellent_matches = len([s for s in similarities if s['cosine_similarity'] > 0.8])
+            good_matches = len([s for s in similarities if s['cosine_similarity'] > 0.7])
 
-    print(f"📈 Performance Insights:")
-    print(f"  • Best Performing Query: '{best_query['query']}' ({best_query['avg_sim']:.4f} avg)")
-    print(f"  • Most Challenging Query: '{worst_query['query']}' ({worst_query['avg_sim']:.4f} avg)")
-    print(f"  • Average Processing Time: {avg_processing_time:.3f}s across all queries")
-    print(f"  • Performance Range: {best_query['avg_sim'] - worst_query['avg_sim']:.4f} similarity difference")
-    print(f"  • Query Diversity: {len(query_stats)} different query types tested")
+            print(f"\n📈 Search Quality Analysis:")
+            print(f"  • Average Query-Document Similarity: {avg_similarity:.4f}")
+            print(f"  • Best Match: {max_similarity:.4f}")
+            print(f"  • Worst Match: {min_similarity:.4f}")
+            print(f"  • Similarity Range: {max_similarity - min_similarity:.4f}")
+            print(f"  • Excellent Matches (>0.8): {excellent_matches}/{len(similarities)}")
+            print(f"  • Good Matches (>0.7): {good_matches}/{len(similarities)}")
 
-    print(f"\n🎯 Enhanced Evaluation Guide:")
-    print(f"  • Excellent Match (>0.9): Near-perfect semantic understanding")
-    print(f"  • High Similarity (0.75-0.9): Strong legal concept recognition")
-    print(f"  • Good Match (0.65-0.75): Solid semantic understanding")
-    print(f"  • Moderate Match (0.5-0.65): Basic concept recognition")
-    print(f"  • Low Similarity (<0.5): Limited semantic connection")
-    print(f"  • This demonstrates the AI's sophisticated understanding of legal context")
-    print(f"  • Vector similarity provides semantic understanding beyond keyword matching")
+            # Search effectiveness assessment
+            if avg_similarity > 0.7:
+                effectiveness = "🟢 Highly Effective"
+            elif avg_similarity > 0.6:
+                effectiveness = "🟡 Moderately Effective"
+            elif avg_similarity > 0.5:
+                effectiveness = "🟠 Somewhat Effective"
+            else:
+                effectiveness = "🔴 Ineffective"
 
-    # Technical excellence indicators
-    print(f"\n🔬 Technical Excellence Indicators:")
-    print(f"  • Semantic Understanding: AI comprehends legal terminology and concepts")
-    print(f"  • Context Awareness: Recognizes relationships between legal documents")
-    print(f"  • Scalability: Handles multiple query types efficiently")
-    print(f"  • Consistency: Reliable performance across different legal domains")
-    print(f"  • Precision: High-quality results with meaningful similarity scores")
+            print(f"  • Overall Search Effectiveness: {effectiveness}")
 
+        return {
+            'query_text': query_text,
+            'similarities': similarities,
+            'avg_similarity': avg_similarity if similarities else 0,
+            'max_similarity': max_similarity if similarities else 0,
+            'min_similarity': min_similarity if similarities else 0,
+            'excellent_matches': excellent_matches if similarities else 0,
+            'good_matches': good_matches if similarities else 0
+        }
+
+    except Exception as e:
+        print(f"❌ Query-document similarity analysis failed: {e}")
+        return None
+
+def ml_distance_document_clustering(document_ids, similarity_threshold=0.7):
+    """
+    Use ML.DISTANCE to cluster documents by similarity using BigQuery.
+
+    Args:
+        document_ids: List of document IDs to cluster
+        similarity_threshold: Minimum similarity for clustering
+
+    Returns:
+        Dictionary with clustering results
+    """
+    print(f"🔍 ML.DISTANCE Document Clustering")
+    print(f"Documents: {len(document_ids)}")
+    print(f"Similarity Threshold: {similarity_threshold}")
+    print("=" * 60)
+
+    try:
+        # Build query for pairwise similarity matrix
+        doc_list = "', '".join(document_ids)
+        query = f"""
+        WITH similarity_matrix AS (
+          SELECT
+            doc1.document_id as doc1,
+            doc2.document_id as doc2,
+            ML.DISTANCE(doc1.embedding, doc2.embedding, 'COSINE') as distance,
+            (1 - ML.DISTANCE(doc1.embedding, doc2.embedding, 'COSINE')) as similarity
+          FROM `{config['project']['id']}.legal_ai_platform_vector_indexes.document_embeddings` doc1
+          CROSS JOIN `{config['project']['id']}.legal_ai_platform_vector_indexes.document_embeddings` doc2
+          WHERE doc1.document_id IN ('{doc_list}')
+            AND doc2.document_id IN ('{doc_list}')
+            AND doc1.document_id < doc2.document_id  -- Avoid duplicates and self-comparison
+        )
+        SELECT
+          doc1,
+          doc2,
+          distance,
+          similarity,
+          CASE
+            WHEN similarity >= {similarity_threshold} THEN 'Similar'
+            ELSE 'Different'
+          END as cluster_status
+        FROM similarity_matrix
+        ORDER BY similarity DESC
+        """
+
+        result = client.query(query)
+        clusters = []
+        similar_pairs = 0
+
+        print(f"📊 Document Similarity Matrix:")
+        print(f"{'Doc 1':<15} {'Doc 2':<15} {'Similarity':<12} {'Distance':<12} {'Status'}")
+        print("-" * 75)
+
+        for row in result:
+            clusters.append({
+                'doc1': row.doc1,
+                'doc2': row.doc2,
+                'distance': row.distance,
+                'similarity': row.similarity,
+                'cluster_status': row.cluster_status
+            })
+
+            status_icon = "🟢" if row.similarity >= similarity_threshold else "🔴"
+            if row.similarity >= similarity_threshold:
+                similar_pairs += 1
+
+            print(f"{row.doc1:<15} {row.doc2:<15} {row.similarity:<12.4f} {row.distance:<12.4f} {status_icon} {row.cluster_status}")
+
+        # Clustering analysis
+        total_pairs = len(clusters)
+        similar_percentage = (similar_pairs / total_pairs * 100) if total_pairs > 0 else 0
+
+        print(f"\n📈 Clustering Analysis:")
+        print(f"  • Total Document Pairs: {total_pairs}")
+        print(f"  • Similar Pairs (≥{similarity_threshold}): {similar_pairs}")
+        print(f"  • Similarity Percentage: {similar_percentage:.1f}%")
+
+        # Find most similar and least similar pairs
+        if clusters:
+            most_similar = max(clusters, key=lambda x: x['similarity'])
+            least_similar = min(clusters, key=lambda x: x['similarity'])
+
+            print(f"  • Most Similar: {most_similar['doc1']} ↔ {most_similar['doc2']} ({most_similar['similarity']:.4f})")
+            print(f"  • Least Similar: {least_similar['doc1']} ↔ {least_similar['doc2']} ({least_similar['similarity']:.4f})")
+
+        return {
+            'clusters': clusters,
+            'similar_pairs': similar_pairs,
+            'total_pairs': total_pairs,
+            'similarity_percentage': similar_percentage,
+            'threshold': similarity_threshold
+        }
+
+    except Exception as e:
+        print(f"❌ Document clustering failed: {e}")
+        return None
+
+# Run simplified VECTOR_SEARCH analysis
+if 'search_result' in locals() and isinstance(search_result, dict) and 'results' in search_result:
+    df_search = analyze_vector_search_results(search_result)
+
+    # Show query comparison
+    print("\n📊 Query Performance Summary:")
+    for query, result in search_results.items():
+        if 'results' in result and result['results']:
+            avg_sim = sum(r['similarity_score'] for r in result['results']) / len(result['results'])
+            print(f"  • '{query}': avg similarity {avg_sim:.3f}")
+
+    # Demonstrate ML.DISTANCE Query-Document Similarity Analysis
+    if len(df_search) >= 2:
+        print("\n🔍 ML.DISTANCE Query-Document Similarity Analysis:")
+        found_docs = df_search['document_id'].tolist()
+        query_doc_similarity = ml_distance_query_document_similarity(search_result['query_text'], found_docs)
+
+        if query_doc_similarity:
+            print(f"\n✅ ML.DISTANCE query-document analysis completed")
+            print(f"Query '{query_doc_similarity['query_text']}' vs {len(query_doc_similarity['similarities'])} documents")
+            print(f"Average similarity: {query_doc_similarity['avg_similarity']:.3f}")
+            print(f"Best match: {query_doc_similarity['max_similarity']:.3f}")
+            print(f"Excellent matches: {query_doc_similarity['excellent_matches']}/{len(query_doc_similarity['similarities'])}")
+
+        # Also demonstrate pairwise document comparison
+        print(f"\n🔍 ML.DISTANCE Pairwise Document Comparison:")
+        top_docs = df_search.head(2)['document_id'].tolist()
+        distance_result = vector_distance_analysis(top_docs[0], top_docs[1])
+
+        if distance_result:
+            print(f"✅ Pairwise comparison: {top_docs[0]} ↔ {top_docs[1]} = {distance_result['cosine_similarity']:.3f} similarity")
 else:
     print("⚠️  No results available for analysis. Please run vector_search() first.")
-    print("💡 Tip: Make sure to run the vector_search() function to get results for analysis.")
 ```
 ::::::

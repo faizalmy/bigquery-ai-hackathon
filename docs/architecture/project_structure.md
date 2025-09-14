@@ -108,7 +108,7 @@ bigquery-ai-hackathon/
 - `src/vector_search.py` - 4 Vector search functions:
   - `ML.GENERATE_EMBEDDING` - Document embeddings
   - `VECTOR_SEARCH` - Similarity search
-  - `VECTOR_DISTANCE` - Distance calculation
+  - `ML.DISTANCE` - Distance calculation
   - `CREATE VECTOR INDEX` - Performance optimization
 
 #### **Hybrid Approach**

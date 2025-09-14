@@ -252,9 +252,9 @@
 - **Performance**: Search speed and result ranking optimization
 - **Business Application**: Case precedent finding and legal research automation
 
-#### **6.3 VECTOR_DISTANCE - Distance Calculations**
+#### **6.3 ML.DISTANCE - Distance Calculations**
 - **Objective**: Calculate precise similarity distances between documents
-- **Implementation**: Use VECTOR_DISTANCE with cosine similarity
+- **Implementation**: Use ML.DISTANCE with cosine similarity
 - **Distance Metrics**: Similarity score interpretation and threshold optimization
 - **Validation**: Distance calculation accuracy and consistency
 - **Use Cases**: Document clustering and relationship mapping
