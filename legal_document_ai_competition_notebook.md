@@ -300,7 +300,7 @@ except Exception as e:
     print("\n🔗 AI Functions Setup:")
     print("   - AI.GENERATE_TABLE and AI.GENERATE_BOOL use BigQuery AI models")
     print("   - AI.GENERATE_BOOL requires a BigQuery AI connection")
-    print("   - Create connection: bq mk --connection --location=US --connection_type=CLOUD_RESOURCE us.legal_ai_connection")
+    print("   - Connection available: us.vertex_ai_connection")
     print("   - Grant Vertex AI User role to the connection's service account")
 ```
 ::::::
@@ -312,12 +312,12 @@ except Exception as e:
 
 1. **Create Connection** (if needed):
    ```bash
-   bq mk --connection --location=US --connection_type=CLOUD_RESOURCE us.legal_ai_connection
+   # Connection already exists: us.vertex_ai_connection
    ```
 
 2. **Grant Permissions** (if needed):
    ```bash
-   bq show --connection --location=US us.legal_ai_connection
+   bq show --connection --location=US us.vertex_ai_connection
    # Grant Vertex AI User role to the service account shown in the output
    ```
 
@@ -334,7 +334,7 @@ except Exception as e:
 try:
     # Test if AI.GENERATE_BOOL connection exists by running a simple test
     test_query = """
-    SELECT AI.GENERATE_BOOL('Test prompt', connection_id => 'us.legal_ai_connection').result as test_result
+    SELECT AI.GENERATE_BOOL('Test prompt', connection_id => 'us.vertex_ai_connection').result as test_result
     """
 
     # Note: This will fail if connection doesn't exist, but that's expected
@@ -1260,14 +1260,14 @@ def ai_generate_bool(document_id=None, limit=10):
                     'Analyze this legal document for urgency. Consider factors like deadlines, time-sensitive matters, emergency situations, or immediate action required. Is this document urgent? ',
                     content
                 ),
-                connection_id => 'us.legal_ai_connection'
+                connection_id => 'us.vertex_ai_connection'
             ).result AS is_urgent,
             AI.GENERATE_BOOL(
                 CONCAT(
                     'Analyze this legal document for urgency. Consider factors like deadlines, time-sensitive matters, emergency situations, or immediate action required. Is this document urgent? ',
                     content
                 ),
-                connection_id => 'us.legal_ai_connection'
+                connection_id => 'us.vertex_ai_connection'
             ).status AS status
         FROM `{project_id}.legal_ai_platform_raw_data.legal_documents`
         {where_clause}
@@ -1301,7 +1301,7 @@ def ai_generate_bool(document_id=None, limit=10):
 
             # Handle boolean result (AI.GENERATE_BOOL returns actual boolean)
             is_urgent = bool(row.is_urgent) if row.is_urgent is not None else False
-            urgency_text = "true" if is_urgent else "false"
+            urgency_text = "URGENT" if is_urgent else "NOT_URGENT"
 
             urgency_data = {
                 'document_id': row.document_id,
