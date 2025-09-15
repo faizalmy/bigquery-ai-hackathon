@@ -1,0 +1,145 @@
+# BigQuery Configuration
+# Legal Document Intelligence Platform - BigQuery AI Hackathon
+
+# Project Configuration
+project:
+  id: "faizal-hackathon"
+  location: "US"
+  billing_account: "auto"
+  description: "BigQuery AI Legal Document Intelligence Platform"
+
+# Environment Configuration
+environment:
+  current: "development"
+  debug: true
+  log_level: "DEBUG"
+
+# Dataset Configuration
+datasets:
+  legal_ai_platform:
+    description: "Main dataset for legal document processing"
+    location: "US"
+    default_table_expiration_ms: 2592000000  # 30 days
+    subdatasets:
+      raw_data:
+        description: "Raw legal documents and source data"
+        location: "US"
+      processed_data:
+        description: "Processed and analyzed documents"
+        location: "US"
+      vector_indexes:
+        description: "Vector embeddings and similarity indexes"
+        location: "US"
+      results:
+        description: "Processing results and analytics"
+        location: "US"
+
+# Table Schemas
+tables:
+  legal_documents:
+    dataset: "legal_ai_platform.raw_data"
+    description: "Raw legal documents for processing"
+    schema:
+      - name: "document_id"
+        type: "STRING"
+        mode: "REQUIRED"
+        description: "Unique document identifier"
+      - name: "content"
+        type: "STRING"
+        mode: "REQUIRED"
+        description: "Full document content"
+      - name: "document_type"
+        type: "STRING"
+        mode: "REQUIRED"
+        description: "Type of legal document (contract, case, brief, statute)"
+      - name: "metadata"
+        type: "JSON"
+        mode: "NULLABLE"
+        description: "Document metadata (date, jurisdiction, parties, etc.)"
+      - name: "file_path"
+        type: "STRING"
+        mode: "NULLABLE"
+        description: "Original file path or URL"
+      - name: "created_at"
+        type: "TIMESTAMP"
+        mode: "REQUIRED"
+        description: "Document ingestion timestamp"
+      - name: "updated_at"
+        type: "TIMESTAMP"
+        mode: "REQUIRED"
+        description: "Last update timestamp"
+
+  document_embeddings:
+    dataset: "legal_ai_platform.vector_indexes"
+    description: "Document embeddings for vector search"
+    schema:
+      - name: "document_id"
+        type: "STRING"
+        mode: "REQUIRED"
+        description: "Reference to legal_documents.document_id"
+      - name: "embedding"
+        type: "FLOAT64"
+        mode: "REPEATED"
+        description: "Document embedding vector"
+      - name: "model_name"
+        type: "STRING"
+        mode: "REQUIRED"
+        description: "Embedding model used (text-embedding-preview-0409)"
+      - name: "model_version"
+        type: "STRING"
+        mode: "REQUIRED"
+        description: "Model version identifier"
+      - name: "created_at"
+        type: "TIMESTAMP"
+        mode: "REQUIRED"
+        description: "Embedding creation timestamp"
+
+  processing_results:
+    dataset: "legal_ai_platform.results"
+    description: "AI processing results from both tracks"
+    schema:
+      - name: "document_id"
+        type: "STRING"
+        mode: "REQUIRED"
+        description: "Reference to legal_documents.document_id"
+      - name: "track1_results"
+        type: "JSON"
+        mode: "NULLABLE"
+        description: "Track 1 generative AI results (summary, extraction, urgency, forecast)"
+      - name: "track2_results"
+        type: "JSON"
+        mode: "NULLABLE"
+        description: "Track 2 vector search results (similarity, rankings)"
+      - name: "processing_status"
+        type: "STRING"
+        mode: "REQUIRED"
+        description: "Processing status (pending, completed, failed)"
+      - name: "processing_time_ms"
+        type: "INT64"
+        mode: "NULLABLE"
+        description: "Processing time in milliseconds"
+      - name: "created_at"
+        type: "TIMESTAMP"
+        mode: "REQUIRED"
+        description: "Result creation timestamp"
+
+
+# AI Model Configuration
+ai_models:
+  ai_gemini_pro:
+    model_name: "gemini-pro"
+    max_tokens: 2048
+    temperature: 0.1
+    top_p: 0.8
+    top_k: 40
+    description: "Gemini Pro model for text generation and analysis"
+
+  text_embedding:
+    model_name: "text-embedding-005"
+    dimensions: 768
+    description: "Text embedding model for vector search"
+
+  timesfm:
+    model_name: "timesfm"
+    description: "Time series forecasting model for AI.FORECAST"
+
