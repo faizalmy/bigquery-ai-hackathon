@@ -1,5 +1,5 @@
 :::::: {.cell .markdown}
-# 🏆 BigQuery AI Hackathon - Legal Document Intelligence Platform
+# 🏆 BigQuery AI - Legal Document Intelligence Platform
 
 **Competition Entry**: Legal Document Analysis using BigQuery AI Functions
 
@@ -13,7 +13,7 @@
 
 ### **1.1 Competition Overview & Track Selection**
 
-Welcome to our BigQuery AI Hackathon submission! We're excited to present the **Legal Document Intelligence Platform** - a groundbreaking solution that addresses real-world challenges in legal document processing using Google Cloud's cutting-edge BigQuery AI capabilities.
+Welcome to our BigQuery AI submission! We're excited to present the **Legal Document Intelligence Platform** - a groundbreaking solution that addresses real-world challenges in legal document processing using Google Cloud's cutting-edge BigQuery AI capabilities.
 
 #### **Our Track Selection: Dual-Track Approach**
 We've strategically chosen to implement **both Track 1 (Generative AI) and Track 2 (Vector Search)** to create a comprehensive legal document intelligence solution:
@@ -64,7 +64,7 @@ Our **Legal Document Intelligence Platform** leverages BigQuery AI to transform 
 │  │   Legal     │    │   Track 2: Vector   │    │  Semantic   │   │
 │  │ Documents   │───▶│   ML.GENERATE_EMBED │───▶│ Search &    │   │
 │  │ (Input)     │    │   VECTOR_SEARCH     │    │ Matching    │   │
-│  └─────────────┘    │   ML.DISTANCE   		│    └─────────────┘   │
+│  └─────────────┘    │   ML.DISTANCE       │    └─────────────┘   │
 │                     └─────────────────────┘                      │
 │                                                                  │
 │  ┌─────────────────────────────────────────────────────────────┐ │
@@ -220,7 +220,7 @@ import os
 from pathlib import Path
 
 # BigQuery Configuration - Legal Document Intelligence Platform
-# BigQuery AI Hackathon Configuration
+# BigQuery AI Configuration
 
 config = {
     # Project Configuration
