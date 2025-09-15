@@ -272,9 +272,6 @@ The Legal Document Intelligence Platform represents the first comprehensive impl
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-**Interactive Architecture Diagram**: [View detailed diagram](https://www.mermaidchart.com/app/projects/0e1b0918-9dec-4a7e-a868-b8cc75006e3b/diagrams/27f6dbea-a190-4878-bf7b-fcf84fae5dbb/version/v0.1/edit)
-
-
 ### BigQuery AI Mastery
 
 The solution demonstrates mastery of all available BigQuery AI functions, showcasing the platform's comprehensive capabilities:
@@ -295,7 +292,29 @@ The platform demonstrates deep understanding of legal document processing requir
 
 **Compliance Considerations**: Designed with legal industry requirements and data privacy considerations in mind.
 
-## Implementation Challenges and Solutions
+## Real-World Legal Industry Challenges and Solutions
+
+### Challenge 1: Managing High Volumes of Unstructured Data
+**Problem**: Legal teams deal with vast amounts of unstructured data including emails, PDFs, chat logs, and multimedia files. This diversity complicates organization, retrieval, and analysis, leading to inefficiencies and increased risk of errors.
+
+**Solution**: Our BigQuery AI platform processes diverse unstructured legal documents through ML.GENERATE_TEXT and AI.GENERATE_TABLE, automatically organizing and extracting key information from complex legal texts.
+
+### Challenge 2: Ensuring Data Privacy and Compliance
+**Problem**: Protecting Personally Identifiable Information (PII) within legal documents is paramount. Failure to properly redact sensitive information can lead to data breaches and non-compliance with regulations such as GDPR and HIPAA.
+
+**Solution**: The platform implements secure document processing with AI.GENERATE_BOOL for urgency detection and structured data extraction that maintains document integrity while identifying sensitive content.
+
+### Challenge 3: Handling Diverse Data Formats
+**Problem**: Legal documents come in various formats, from structured contracts to unstructured case notes. Processing this diversity requires systems capable of handling multiple file types and extracting relevant information accurately.
+
+**Solution**: Our unified BigQuery AI approach handles diverse document formats through a single platform, using VECTOR_SEARCH for semantic understanding across different document types and ML.GENERATE_EMBEDDING for consistent processing.
+
+### Challenge 4: Overcoming Inefficient Document Management
+**Problem**: Many law firms struggle with outdated document management systems leading to inefficiencies, multiple repositories, over-reliance on email, and unsearchable content resulting in lost files and missed deadlines.
+
+**Solution**: The platform provides centralized, searchable document processing with AI.FORECAST for predictive insights and comprehensive vector search capabilities that make all legal content discoverable and actionable.
+
+## Technical Implementation Challenges and Solutions
 
 ### Technical Challenges Overcome
 
@@ -306,15 +325,6 @@ The platform demonstrates deep understanding of legal document processing requir
 **Error Handling**: Developed comprehensive error management strategies to handle generic error messages and provide meaningful feedback for debugging and optimization.
 
 **Performance Optimization**: Achieved consistent performance across all functions through query optimization and parameter tuning.
-
-
-### Development Insights
-
-**Rapid Learning**: Successfully mastered all six BigQuery AI functions within one month of focused development, demonstrating the platform's accessibility and developer-friendly design.
-
-**Integration Complexity**: Successfully integrated multiple AI functions into a cohesive workflow, showcasing BigQuery's ability to support complex AI applications.
-
-**Real-World Testing**: Validated all functions with actual legal documents, ensuring practical applicability and performance under realistic conditions.
 
 ## Future Roadmap
 
