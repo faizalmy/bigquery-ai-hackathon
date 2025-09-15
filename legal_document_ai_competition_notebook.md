@@ -953,14 +953,11 @@ def ai_generate_table(document_id=None, limit=10):
             document_type,
             case_number,
             court_name,
-            case_date,
             plaintiff,
             defendant,
-            monetary_amount,
-            legal_issues,
             outcome,
             status
-        FROM AI.GENERATE_TABLE(
+            FROM AI.GENERATE_TABLE(
             MODEL `{project_id}.ai_models.ai_gemini_pro`,
             (
                 SELECT
@@ -974,8 +971,8 @@ def ai_generate_table(document_id=None, limit=10):
                 {where_clause}
             ),
             STRUCT(
-                "case_number STRING, court_name STRING, case_date STRING, plaintiff STRING, defendant STRING, monetary_amount STRING, legal_issues STRING, outcome STRING" AS output_schema,
-                1024 AS max_output_tokens
+                "case_number STRING, court_name STRING, plaintiff STRING, defendant STRING, outcome STRING" AS output_schema,
+              1024 AS max_output_tokens
             )
         )
         """
@@ -1011,11 +1008,8 @@ def ai_generate_table(document_id=None, limit=10):
             extracted_data = {
                 'case_number': row.case_number,
                 'court_name': row.court_name,
-                'case_date': row.case_date,
                 'plaintiff': row.plaintiff,
                 'defendant': row.defendant,
-                'monetary_amount': row.monetary_amount,
-                'legal_issues': row.legal_issues,
                 'outcome': row.outcome
             }
 
