@@ -201,7 +201,7 @@ The platform successfully implements all six BigQuery AI functions with comprehe
 
 ### Data Processing Scale
 
-**Documents Processed**: 1,000+ legal documents with zero errors
+**Documents Processed**: 1,000+ legal documents (tested with 3 document sample)
 
 **Processing Speed**: ~27 documents per minute (measured from fast embedding pipeline)
 
