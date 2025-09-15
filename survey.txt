@@ -1,0 +1,30 @@
+**Team Survey: BigQuery AI - Building the Future of Data**
+
+**Instructions:**
+
+*   This survey is for bonus points.
+*   Points are awarded for completeness, not for the content of your answers.
+*   We highly encourage everyone to submit one.
+*   There are 3 questions in total - please answer all 3.
+---
+
+**Team Member Experience:**
+
+1)  **BigQuery AI:** Please list each team member(s) months of experience with BigQuery AI.
+    *   Team Member 1: 1 months (Focused on BigQuery AI functions, ML.GENERATE_TEXT, AI.GENERATE_TABLE, AI.GENERATE_BOOL, AI.FORECAST, ML.GENERATE_EMBEDDING, VECTOR_SEARCH, ML.DISTANCE)
+
+2)  **Google Cloud:** Please list each team member(s) months of experience with Google Cloud.
+    *   Team Member 1: 12 months (Cloud Storage, Vertex AI, Cloud Functions, IAM, and GCP services)
+
+---
+
+3)  **Feedback:**
+
+We’d love to hear from you and your experience in working with the technology during this hackathon, positive or negative. Please provide any feedback on your experience with BigQuery AI.
+
+Working with BigQuery AI during this hackathon has been both exciting and challenging. In my project, I used ML.GENERATE_TEXT and AI.GENERATE_TABLE to summarize and extract structured data from real legal documents. Being able to run these AI models directly inside SQL saved me from building a whole pipeline — no ETL, no separate API calls — just one query. That was a big productivity boost.
+
+In real-world testing, though, I hit a few snags. Project names with hyphens caused quoting and backtick issues that weren't obvious at first. Some AI functions like AI.GENERATE_BOOL required a connection_id, while others didn't, which added confusion and slowed down my development time. Error messages also tended to be generic, making it harder to debug when something didn't work.
+
+Despite those challenges, the experience gave me a clear glimpse of the potential. In a real-world workflow where legal teams need fast insights from thousands of documents, this approach could cut hours or days from the process. With clearer documentation, more consistent syntax, and friendlier error messages, BigQuery AI could easily become a go-to platform for enterprise-scale AI-driven analytics.
+
