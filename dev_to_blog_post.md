@@ -2,13 +2,13 @@
 
 *How I leveraged all 6 BigQuery AI functions to create a legal document processing system that achieves 99%+ efficiency improvements and solves real-world legal industry challenges*
 
-### 🎯 Introduction
+### Introduction
 
 Legal professionals spend countless hours manually processing documents, extracting key information, and searching for relevant precedents. What if we could automate this entire workflow using BigQuery's cutting-edge AI capabilities?
 
 In this post, I'll walk you through my complete implementation of a **Legal Document Intelligence Platform** that leverages all 6 BigQuery AI functions to transform how legal documents are processed, analyzed, and searched. The results? **99.2% efficiency improvements** in document summarization and **55.1%-70.0% similarity matching** in semantic search.
 
-### 🏗️ The Challenge: Legal Document Processing Pain Points
+### The Challenge: Legal Document Processing Pain Points
 
 The legal industry faces several critical challenges:
 
@@ -17,7 +17,7 @@ The legal industry faces several critical challenges:
 - **Search Limitations**: Traditional keyword-based search misses semantically relevant precedents
 - **Scalability Issues**: Processing thousands of documents becomes increasingly time-consuming
 
-### 💡 The Solution: BigQuery AI Architecture
+### The Solution: BigQuery AI Architecture
 
 I designed a comprehensive solution that combines **Generative AI** and **Vector Search** to address all these challenges:
 
@@ -32,7 +32,7 @@ Vector Search (The Semantic Detective)
 - **VECTOR_SEARCH**: Similarity search and document matching
 - **ML.DISTANCE**: Precise similarity calculations
 
-### 🛠️ Technical Implementation
+### Technical Implementation
 
 #### Core BigQuery AI Function Implementation
 
@@ -231,7 +231,7 @@ FROM VECTOR_SEARCH(
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### 📊 Performance Results
+### Performance Results
 
 The implementation delivered impressive results across all metrics:
 
@@ -281,7 +281,7 @@ The implementation delivered impressive results across all metrics:
   - *Cost Effectiveness*: Pay-per-query model with no infrastructure overhead
   - *Batch Processing*: Optimized for handling multiple documents simultaneously
 
-### 🚧 Real-World Legal Industry Challenges
+### Real-World Legal Industry Challenges
 
 #### Challenge 1: Managing High Volumes of Unstructured Data
 **Problem**: Legal teams deal with vast amounts of unstructured data including emails, PDFs, chat logs, and multimedia files. This diversity complicates organization, retrieval, and analysis, leading to inefficiencies and increased risk of errors.
@@ -303,7 +303,7 @@ The implementation delivered impressive results across all metrics:
 
 **Solution**: The platform provides centralized, searchable document processing with AI.FORECAST for predictive insights and comprehensive vector search capabilities that make all legal content discoverable and actionable.
 
-### 🎯 Key Learnings
+### Key Learnings
 
 1. **BigQuery AI Functions**: All 6 functions worked reliably with real legal documents
 2. **Domain-Specific Prompts Matter**: Legal terminology and context significantly improved results
@@ -314,7 +314,7 @@ The implementation delivered impressive results across all metrics:
 7. **Production Ready**: BigQuery AI functions are mature and reliable for enterprise use
 8. **Business Value**: Real-world implementation proves the business value of AI in specialized domains
 
-### 🔮 Future Enhancements
+### Future Enhancements
 
 The platform has significant potential for expansion including diverse unstructured data processing, advanced clustering, multi-language support, API development, and industry specialization. The cloud-native architecture provides a foundation for scaling to international markets and developing custom legal domain models for enhanced accuracy and expertise.
 
@@ -338,11 +338,11 @@ The platform has significant potential for expansion including diverse unstructu
 This expansion would demonstrate the full potential of BigQuery AI for processing truly diverse unstructured legal data, addressing the core challenge of handling mixed-format data that companies struggle to process effectively.
 
 
-### 📚 Resources and Code
+### Resources and Code
 
 - **Complete Implementation & Documentation**: [GitHub Repository](https://github.com/faizalmy/bigquery-ai-hackathon)
 
-### 💬 Conclusion
+### Conclusion
 
 Building this Legal Document Intelligence Platform with BigQuery AI demonstrates how AI can solve real-world business challenges in the legal industry. The combination of generative AI and vector search capabilities provides a powerful foundation for transforming how legal professionals work with documents.
 

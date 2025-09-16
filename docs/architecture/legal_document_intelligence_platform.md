@@ -8,7 +8,6 @@
 **Project Title:** BigQuery AI Legal Document Intelligence Platform
 **Track:** Dual-Track Approach (Track 1: Generative AI + Track 2: Vector Search)
 **Competition:** BigQuery AI Hackathon - Building the Future of Data
-**Prize Pool:** $100,000 total
 
 ### **Problem Statement:**
 Legal professionals spend 40% of their time on document research and analysis, processing thousands of unstructured legal documents including contracts, briefs, and case files. Existing tools require manual work and miss 30% of relevant precedents, making it hard to find patterns, generate summaries, or extract key legal insights efficiently.
